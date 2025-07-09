@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作台 - 医疗CRM管理后台系统</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1890FF',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        error: '#F5222D',
+                        'text-primary': '#262626',
+                        'text-secondary': '#595959',
+                        'text-tertiary': '#8C8C8C',
+                        'border-color': '#D9D9D9',
+                        'bg-light': '#F5F5F5',
+                        'bg-lighter': '#FAFAFA',
+                        'menu-dark': '#001529',
+                        'menu-dark-active': '#1890FF',
+                    },
+                    boxShadow: {
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.09)',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            background-color: #F5F5F5;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #001529;
+            color: rgba(255, 255, 255, 0.65);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .sidebar-logo {
+            height: 64px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            background-color: #002140;
+        }
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+        .sidebar-menu-item {
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .sidebar-menu-item:hover {
+            color: white;
+        }
+        .sidebar-menu-item.active {
+            background-color: #1890FF;
+            color: white;
+        }
+        .sidebar-menu-item i {
+            margin-right: 10px;
+            width: 16px;
+            text-align: center;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 200px;
+            right: 0;
+            height: 64px;
+            background-color: white;
+            box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+        .content {
+            margin-left: 200px;
+            padding: 88px 24px 24px;
+            min-height: 100vh;
+        }
+        .stat-card {
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+            padding: 24px;
+        }
+        .chart-container {
+            height: 300px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+            padding: 24px;
+        }
+        .quick-action {
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .quick-action:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background-color: #F5222D;
+            color: white;
+            font-size: 12px;
+            line-height: 16px;
+            text-align: center;
+            padding: 0 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边导航 -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <i class="fas fa-hospital text-primary text-xl mr-2"></i>
+            <span class="text-white font-medium">医疗CRM系统</span>
+        </div>
+        <div class="sidebar-menu">
+            <div class="sidebar-menu-item active">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>工作台</span>
+            </div>
+            <div class="sidebar-menu-item">
+                <i class="fas fa-users"></i>
+                <span>用户管理</span>
+            </div>
+            <div class="sidebar-menu-item">
+                <i class="fas fa-user-injured"></i>
+                <span>就诊人管理</span>
+            </div>
+            <div class="sidebar-menu-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>订单管理</span>
+            </div>
+            <div class="sidebar-menu-item">
+                <i class="fas fa-chart-line"></i>
+                <span>数据分析</span>
+            </div>
+            <div class="sidebar-menu-item">
+                <i class="fas fa-cog"></i>
+                <span>系统设置</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <div class="header">
+        <div class="flex-1 flex items-center">
+            <i class="fas fa-bars text-text-secondary text-lg cursor-pointer hover:text-primary"></i>
+            <div class="ml-6 flex">
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">首页</div>
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">帮助文档</div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-6">
+            <div class="relative cursor-pointer">
+                <i class="fas fa-bell text-text-secondary text-lg hover:text-primary"></i>
+                <span class="notification-badge">5</span>
+            </div>
+            <div class="flex items-center cursor-pointer">
+                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                     alt="用户头像" class="w-8 h-8 rounded-full mr-2" />
+                <span class="text-text-secondary">管理员</span>
+                <i class="fas fa-chevron-down text-text-tertiary ml-1 text-xs"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 内容区 -->
+    <div class="content">
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-text-primary">工作台</h1>
+            <p class="text-text-secondary mt-1">欢迎回来，今天是 2023年6月15日</p>
+        </div>
+
+        <!-- 数据概览 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div class="stat-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-text-secondary mb-2">总用户数</p>
+                        <h2 class="text-3xl font-bold text-text-primary">8,846</h2>
+                    </div>
+                    <div class="p-3 rounded-full bg-blue-100 text-primary">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center">
+                    <span class="text-success mr-2"><i class="fas fa-arrow-up"></i> 12%</span>
+                    <span class="text-text-tertiary">较上周</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-text-secondary mb-2">就诊人数量</p>
+                        <h2 class="text-3xl font-bold text-text-primary">12,721</h2>
+                    </div>
+                    <div class="p-3 rounded-full bg-green-100 text-success">
+                        <i class="fas fa-user-injured text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center">
+                    <span class="text-success mr-2"><i class="fas fa-arrow-up"></i> 8%</span>
+                    <span class="text-text-tertiary">较上周</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-text-secondary mb-2">本月订单数</p>
+                        <h2 class="text-3xl font-bold text-text-primary">2,856</h2>
+                    </div>
+                    <div class="p-3 rounded-full bg-yellow-100 text-warning">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center">
+                    <span class="text-error mr-2"><i class="fas fa-arrow-down"></i> 3%</span>
+                    <span class="text-text-tertiary">较上月</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-text-secondary mb-2">本月收入</p>
+                        <h2 class="text-3xl font-bold text-text-primary">¥198,520</h2>
+                    </div>
+                    <div class="p-3 rounded-full bg-red-100 text-error">
+                        <i class="fas fa-yen-sign text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center">
+                    <span class="text-success mr-2"><i class="fas fa-arrow-up"></i> 6%</span>
+                    <span class="text-text-tertiary">较上月</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="chart-container">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-text-primary">订单趋势</h3>
+                    <div class="flex space-x-2">
+                        <button class="px-3 py-1 text-sm rounded border border-border-color hover:border-primary hover:text-primary transition duration-300">本周</button>
+                        <button class="px-3 py-1 text-sm rounded border border-primary bg-blue-50 text-primary transition duration-300">本月</button>
+                        <button class="px-3 py-1 text-sm rounded border border-border-color hover:border-primary hover:text-primary transition duration-300">本年</button>
+                    </div>
+                </div>
+                <!-- 图表占位，实际项目中应使用图表库如Chart.js或ECharts -->
+                <div class="w-full h-[220px] bg-bg-lighter rounded flex items-center justify-center">
+                    <!-- 模拟折线图 -->
+                    <svg width="100%" height="100%" viewBox="0 0 800 220" preserveAspectRatio="none">
+                        <!-- 横轴 -->
+                        <line x1="40" y1="180" x2="760" y2="180" stroke="#D9D9D9" stroke-width="1"/>
+                        <!-- 纵轴 -->
+                        <line x1="40" y1="20" x2="40" y2="180" stroke="#D9D9D9" stroke-width="1"/>
+                        
+                        <!-- 横轴刻度 -->
+                        <text x="100" y="200" font-size="12" text-anchor="middle" fill="#8C8C8C">1月</text>
+                        <text x="160" y="200" font-size="12" text-anchor="middle" fill="#8C8C8C">2月</text>
+                        <text x="220" y="200" font-size="12" text-anchor="middle" fill="#8C8C8C">3月</text>
+                        <text x="280" y="200" font-size="12" text-anchor="middle" fill="#8C8C8C">4月</text>
+                        <text x="340" y="200" font-size="12" text-anchor="middle" fill="#8C8C8C">5月</text>
+                        <text x="400" y="200" font-size="12" text-anchor="middle" fill="#8C8C8C">6月</text>
+                        <text x="460" y="200" font-size="12" text-anchor="middle" fill="#8C8C8C">7月</text>
+                        <text x="520" y="200" font-size="12" text-anchor="middle" fill="#8C8C8C">8月</text>
+                        <text x="580" y="200" font-size="12" text-anchor="middle" fill="#8C8C8C">9月</text>
+                        <text x="640" y="200" font-size="12" text-anchor="middle" fill="#8C8C8C">10月</text>
+                        <text x="700" y="200" font-size="12" text-anchor="middle" fill="#8C8C8C">11月</text>
+                        <text x="760" y="200" font-size="12" text-anchor="middle" fill="#8C8C8C">12月</text>
+                        
+                        <!-- 纵轴刻度 -->
+                        <text x="30" y="180" font-size="12" text-anchor="end" fill="#8C8C8C">0</text>
+                        <text x="30" y="140" font-size="12" text-anchor="end" fill="#8C8C8C">500</text>
+                        <text x="30" y="100" font-size="12" text-anchor="end" fill="#8C8C8C">1000</text>
+                        <text x="30" y="60" font-size="12" text-anchor="end" fill="#8C8C8C">1500</text>
+                        <text x="30" y="20" font-size="12" text-anchor="end" fill="#8C8C8C">2000</text>
+                        
+                        <!-- 网格线 -->
+                        <line x1="40" y1="140" x2="760" y2="140" stroke="#F0F0F0" stroke-width="1"/>
+                        <line x1="40" y1="100" x2="760" y2="100" stroke="#F0F0F0" stroke-width="1"/>
+                        <line x1="40" y1="60" x2="760" y2="60" stroke="#F0F0F0" stroke-width="1"/>
+                        <line x1="40" y1="20" x2="760" y2="20" stroke="#F0F0F0" stroke-width="1"/>
+                        
+                        <!-- 折线图数据 -->
+                        <polyline points="100,150 160,140 220,130 280,120 340,100 400,80 460,90 520,70 580,60 640,50 700,40 760,30" 
+                                fill="none" stroke="#1890FF" stroke-width="2"/>
+                        
+                        <!-- 数据点 -->
+                        <circle cx="100" cy="150" r="4" fill="#1890FF"/>
+                        <circle cx="160" cy="140" r="4" fill="#1890FF"/>
+                        <circle cx="220" cy="130" r="4" fill="#1890FF"/>
+                        <circle cx="280" cy="120" r="4" fill="#1890FF"/>
+                        <circle cx="340" cy="100" r="4" fill="#1890FF"/>
+                        <circle cx="400" cy="80" r="4" fill="#1890FF"/>
+                        <circle cx="460" cy="90" r="4" fill="#1890FF"/>
+                        <circle cx="520" cy="70" r="4" fill="#1890FF"/>
+                        <circle cx="580" cy="60" r="4" fill="#1890FF"/>
+                        <circle cx="640" cy="50" r="4" fill="#1890FF"/>
+                        <circle cx="700" cy="40" r="4" fill="#1890FF"/>
+                        <circle cx="760" cy="30" r="4" fill="#1890FF"/>
+                        
+                        <!-- 面积图填充 -->
+                        <path d="M100,150 L160,140 L220,130 L280,120 L340,100 L400,80 L460,90 L520,70 L580,60 L640,50 L700,40 L760,30 L760,180 L100,180 Z" 
+                              fill="rgba(24, 144, 255, 0.1)"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-text-primary">用户分布</h3>
+                    <div class="flex space-x-2">
+                        <button class="px-3 py-1 text-sm rounded border border-border-color hover:border-primary hover:text-primary transition duration-300">性别</button>
+                        <button class="px-3 py-1 text-sm rounded border border-primary bg-blue-50 text-primary transition duration-300">年龄段</button>
+                        <button class="px-3 py-1 text-sm rounded border border-border-color hover:border-primary hover:text-primary transition duration-300">地区</button>
+                    </div>
+                </div>
+                <!-- 图表占位，实际项目中应使用图表库如Chart.js或ECharts -->
+                <div class="w-full h-[220px] bg-bg-lighter rounded flex items-center justify-center">
+                    <!-- 模拟饼图 -->
+                    <svg width="220" height="220" viewBox="0 0 220 220">
+                        <!-- 饼图 -->
+                        <circle cx="110" cy="110" r="80" fill="white"/>
+                        
+                        <!-- 饼图扇区 -->
+                        <path d="M110,110 L110,30 A80,80 0 0,1 183.6,146.4 Z" fill="#1890FF"/>
+                        <path d="M110,110 L183.6,146.4 A80,80 0 0,1 110,190 Z" fill="#13C2C2"/>
+                        <path d="M110,110 L110,190 A80,80 0 0,1 36.4,146.4 Z" fill="#52C41A"/>
+                        <path d="M110,110 L36.4,146.4 A80,80 0 0,1 36.4,73.6 Z" fill="#FAAD14"/>
+                        <path d="M110,110 L36.4,73.6 A80,80 0 0,1 110,30 Z" fill="#F5222D"/>
+                        
+                        <!-- 中心圆 -->
+                        <circle cx="110" cy="110" r="40" fill="white"/>
+                        <text x="110" y="105" font-size="14" text-anchor="middle" fill="#262626" font-weight="bold">用户年龄分布</text>
+                        <text x="110" y="125" font-size="12" text-anchor="middle" fill="#8C8C8C">总计: 8,846</text>
+                    </svg>
+                    
+                    <!-- 图例 -->
+                    <div class="ml-8">
+                        <div class="flex items-center mb-2">
+                            <div class="w-3 h-3 bg-[#1890FF] rounded-sm mr-2"></div>
+                            <span class="text-text-secondary text-sm">18-24岁 (28%)</span>
+                        </div>
+                        <div class="flex items-center mb-2">
+                            <div class="w-3 h-3 bg-[#13C2C2] rounded-sm mr-2"></div>
+                            <span class="text-text-secondary text-sm">25-34岁 (22%)</span>
+                        </div>
+                        <div class="flex items-center mb-2">
+                            <div class="w-3 h-3 bg-[#52C41A] rounded-sm mr-2"></div>
+                            <span class="text-text-secondary text-sm">35-44岁 (25%)</span>
+                        </div>
+                        <div class="flex items-center mb-2">
+                            <div class="w-3 h-3 bg-[#FAAD14] rounded-sm mr-2"></div>
+                            <span class="text-text-secondary text-sm">45-54岁 (15%)</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-[#F5222D] rounded-sm mr-2"></div>
+                            <span class="text-text-secondary text-sm">55岁以上 (10%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快捷操作 -->
+        <div class="mb-6">
+            <h3 class="text-lg font-bold text-text-primary mb-4">快捷操作</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="quick-action" onclick="window.location.href='user-create.html'">
+                    <div class="p-3 rounded-full bg-blue-100 text-primary mb-3">
+                        <i class="fas fa-user-plus text-xl"></i>
+                    </div>
+                    <span class="text-text-secondary">创建用户</span>
+                </div>
+                
+                <div class="quick-action" onclick="window.location.href='patient-create.html'">
+                    <div class="p-3 rounded-full bg-green-100 text-success mb-3">
+                        <i class="fas fa-user-injured text-xl"></i>
+                    </div>
+                    <span class="text-text-secondary">添加就诊人</span>
+                </div>
+                
+                <div class="quick-action" onclick="window.location.href='order-create.html'">
+                    <div class="p-3 rounded-full bg-yellow-100 text-warning mb-3">
+                        <i class="fas fa-file-invoice text-xl"></i>
+                    </div>
+                    <span class="text-text-secondary">创建订单</span>
+                </div>
+                
+                <div class="quick-action" onclick="window.location.href='analytics-overview.html'">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-500 mb-3">
+                        <i class="fas fa-chart-pie text-xl"></i>
+                    </div>
+                    <span class="text-text-secondary">数据报表</span>
+                </div>
+                
+                <div class="quick-action" onclick="window.location.href='settings-permissions.html'">
+                    <div class="p-3 rounded-full bg-red-100 text-error mb-3">
+                        <i class="fas fa-user-shield text-xl"></i>
+                    </div>
+                    <span class="text-text-secondary">权限设置</span>
+                </div>
+                
+                <div class="quick-action">
+                    <div class="p-3 rounded-full bg-gray-100 text-text-secondary mb-3">
+                        <i class="fas fa-ellipsis-h text-xl"></i>
+                    </div>
+                    <span class="text-text-secondary">更多功能</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最近活动 -->
+        <div class="bg-white shadow-card rounded-md p-6">
+            <h3 class="text-lg font-bold text-text-primary mb-4">最近活动</h3>
+            <div class="space-y-4">
+                <div class="flex">
+                    <div class="mr-4 relative">
+                        <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                        <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                             alt="用户头像" class="w-10 h-10 rounded-full" />
+                        <div class="absolute top-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white"></div>
+                    </div>
+                    <div>
+                        <p class="text-text-primary">管理员 <span class="text-text-tertiary">创建了新用户</span> <a href="#" class="text-primary">张三</a></p>
+                        <p class="text-text-tertiary text-sm">2分钟前</p>
+                    </div>
+                </div>
+                
+                <div class="flex">
+                    <div class="mr-4 relative">
+                        <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-wearing-teal-dress-shirt-J1OScm_uHUQ -->
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                             alt="用户头像" class="w-10 h-10 rounded-full" />
+                        <div class="absolute top-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white"></div>
+                    </div>
+                    <div>
+                        <p class="text-text-primary">前台接待 <span class="text-text-tertiary">添加了新就诊人</span> <a href="#" class="text-primary">李四</a></p>
+                        <p class="text-text-tertiary text-sm">15分钟前</p>
+                    </div>
+                </div>
+                
+                <div class="flex">
+                    <div class="mr-4 relative">
+                        <!-- 图片来源：Unsplash - https://unsplash.com/photos/man-in-brown-button-up-shirt-WMD64tMfc4k -->
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                             alt="用户头像" class="w-10 h-10 rounded-full" />
+                        <div class="absolute top-0 right-0 w-3 h-3 bg-gray-300 rounded-full border-2 border-white"></div>
+                    </div>
+                    <div>
+                        <p class="text-text-primary">财务人员 <span class="text-text-tertiary">处理了订单</span> <a href="#" class="text-primary">#20230615001</a> <span class="text-text-tertiary">的支付</span></p>
+                        <p class="text-text-tertiary text-sm">30分钟前</p>
+                    </div>
+                </div>
+                
+                <div class="flex">
+                    <div class="mr-4 relative">
+                        <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                        <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                             alt="用户头像" class="w-10 h-10 rounded-full" />
+                        <div class="absolute top-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white"></div>
+                    </div>
+                    <div>
+                        <p class="text-text-primary">管理员 <span class="text-text-tertiary">更新了系统设置</span></p>
+                        <p class="text-text-tertiary text-sm">1小时前</p>
+                    </div>
+                </div>
+                
+                <div class="flex">
+                    <div class="mr-4 relative">
+                        <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-wearing-teal-dress-shirt-J1OScm_uHUQ -->
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                             alt="用户头像" class="w-10 h-10 rounded-full" />
+                        <div class="absolute top-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white"></div>
+                    </div>
+                    <div>
+                        <p class="text-text-primary">前台接待 <span class="text-text-tertiary">创建了新订单</span> <a href="#" class="text-primary">#20230615002</a></p>
+                        <p class="text-text-tertiary text-sm">2小时前</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <button class="text-primary hover:text-blue-600 transition duration-300">查看更多</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统设置 - 权限管理 - 医疗CRM管理后台系统</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1890FF',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        error: '#F5222D',
+                        'text-primary': '#262626',
+                        'text-secondary': '#595959',
+                        'text-tertiary': '#8C8C8C',
+                        'border-color': '#D9D9D9',
+                        'bg-light': '#F5F5F5',
+                        'bg-lighter': '#FAFAFA',
+                        'menu-dark': '#001529',
+                        'menu-dark-active': '#1890FF',
+                    },
+                    boxShadow: {
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.09)',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            background-color: #F5F5F5;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #001529;
+            color: rgba(255, 255, 255, 0.65);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .sidebar-logo {
+            height: 64px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            background-color: #002140;
+        }
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+        .sidebar-menu-item {
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .sidebar-menu-item:hover {
+            color: white;
+        }
+        .sidebar-menu-item.active {
+            background-color: #1890FF;
+            color: white;
+        }
+        .sidebar-menu-item i {
+            margin-right: 10px;
+            width: 16px;
+            text-align: center;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 200px;
+            right: 0;
+            height: 64px;
+            background-color: white;
+            box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+        .content {
+            margin-left: 200px;
+            padding: 88px 24px 24px;
+            min-height: 100vh;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background-color: #F5222D;
+            color: white;
+            font-size: 12px;
+            line-height: 16px;
+            text-align: center;
+            padding: 0 4px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #F0F0F0;
+            margin-bottom: 16px;
+        }
+        .tab {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 32px;
+            color: #595959;
+            position: relative;
+        }
+        .tab:hover {
+            color: #1890FF;
+        }
+        .tab.active {
+            color: #1890FF;
+            font-weight: 500;
+        }
+        .tab.active:after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #1890FF;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 500;
+            color: #262626;
+            background-color: #FAFAFA;
+            border-bottom: 1px solid #F0F0F0;
+        }
+        .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+        .table tr:hover td {
+            background-color: #FAFAFA;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 8px;
+            height: 24px;
+            border-radius: 2px;
+            font-size: 12px;
+            line-height: 22px;
+        }
+        .tag-green {
+            background-color: #F6FFED;
+            border: 1px solid #B7EB8F;
+            color: #52C41A;
+        }
+        .tag-blue {
+            background-color: #E6F7FF;
+            border: 1px solid #91D5FF;
+            color: #1890FF;
+        }
+        .tag-orange {
+            background-color: #FFF7E6;
+            border: 1px solid #FFD591;
+            color: #FA8C16;
+        }
+        .tag-red {
+            background-color: #FFF1F0;
+            border: 1px solid #FFA39E;
+            color: #F5222D;
+        }
+        .tag-purple {
+            background-color: #F9F0FF;
+            border: 1px solid #D3ADF7;
+            color: #722ED1;
+        }
+        .tag-gray {
+            background-color: #F5F5F5;
+            border: 1px solid #D9D9D9;
+            color: #8C8C8C;
+        }
+        .settings-menu {
+            width: 200px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+            overflow: hidden;
+        }
+        .settings-menu-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #595959;
+            display: flex;
+            align-items: center;
+        }
+        .settings-menu-item:hover {
+            color: #1890FF;
+            background-color: #F5F5F5;
+        }
+        .settings-menu-item.active {
+            color: #1890FF;
+            background-color: #E6F7FF;
+            border-right: 3px solid #1890FF;
+        }
+        .settings-menu-item i {
+            margin-right: 10px;
+            width: 16px;
+            text-align: center;
+        }
+        .settings-content {
+            flex: 1;
+            margin-left: 24px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+            padding: 24px;
+        }
+        .permission-group {
+            margin-bottom: 24px;
+            border: 1px solid #F0F0F0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .permission-group-header {
+            padding: 12px 16px;
+            background-color: #FAFAFA;
+            border-bottom: 1px solid #F0F0F0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .permission-group-title {
+            font-weight: 500;
+            color: #262626;
+        }
+        .permission-group-content {
+            padding: 16px;
+        }
+        .permission-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .permission-item:last-child {
+            margin-bottom: 0;
+        }
+        .permission-item-label {
+            margin-left: 8px;
+            color: #595959;
+        }
+        .permission-item-description {
+            margin-left: 8px;
+            color: #8C8C8C;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边导航 -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <i class="fas fa-hospital text-primary text-xl mr-2"></i>
+            <span class="text-white font-medium">医疗CRM系统</span>
+        </div>
+        <div class="sidebar-menu">
+            <div class="sidebar-menu-item" onclick="window.location.href='dashboard.html'">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>工作台</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='user-list.html'">
+                <i class="fas fa-users"></i>
+                <span>用户管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='patient-list.html'">
+                <i class="fas fa-user-injured"></i>
+                <span>就诊人管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='order-list.html'">
+                <i class="fas fa-shopping-cart"></i>
+                <span>订单管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='analytics-overview.html'">
+                <i class="fas fa-chart-line"></i>
+                <span>数据分析</span>
+            </div>
+            <div class="sidebar-menu-item active">
+                <i class="fas fa-cog"></i>
+                <span>系统设置</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <div class="header">
+        <div class="flex-1 flex items-center">
+            <i class="fas fa-bars text-text-secondary text-lg cursor-pointer hover:text-primary"></i>
+            <div class="ml-6 flex">
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">首页</div>
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">帮助文档</div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-6">
+            <div class="relative cursor-pointer">
+                <i class="fas fa-bell text-text-secondary text-lg hover:text-primary"></i>
+                <span class="notification-badge">5</span>
+            </div>
+            <div class="flex items-center cursor-pointer">
+                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                     alt="用户头像" class="w-8 h-8 rounded-full mr-2" />
+                <span class="text-text-secondary">管理员</span>
+                <i class="fas fa-chevron-down text-text-tertiary ml-1 text-xs"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 内容区 -->
+    <div class="content">
+        <!-- 面包屑导航 -->
+        <div class="flex items-center text-text-secondary mb-6">
+            <a href="dashboard.html" class="hover:text-primary">首页</a>
+            <i class="fas fa-angle-right mx-2 text-xs"></i>
+            <span class="text-text-primary">系统设置</span>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-text-primary">系统设置</h1>
+        </div>
+
+        <!-- 设置内容 -->
+        <div class="flex">
+            <!-- 设置菜单 -->
+            <div class="settings-menu">
+                <div class="settings-menu-item active">
+                    <i class="fas fa-user-shield"></i>
+                    <span>权限管理</span>
+                </div>
+                <div class="settings-menu-item">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>系统参数</span>
+                </div>
+                <div class="settings-menu-item">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>字典管理</span>
+                </div>
+                <div class="settings-menu-item">
+                    <i class="fas fa-history"></i>
+                    <span>操作日志</span>
+                </div>
+                <div class="settings-menu-item">
+                    <i class="fas fa-database"></i>
+                    <span>数据备份</span>
+                </div>
+                <div class="settings-menu-item">
+                    <i class="fas fa-plug"></i>
+                    <span>系统集成</span>
+                </div>
+                <div class="settings-menu-item">
+                    <i class="fas fa-bell"></i>
+                    <span>消息通知</span>
+                </div>
+                <div class="settings-menu-item">
+                    <i class="fas fa-user-cog"></i>
+                    <span>个人设置</span>
+                </div>
+            </div>
+
+            <!-- 设置内容 -->
+            <div class="settings-content">
+                <!-- 选项卡 -->
+                <div class="tabs">
+                    <div class="tab active" data-tab="roles">角色管理</div>
+                    <div class="tab" data-tab="permissions">权限配置</div>
+                    <div class="tab" data-tab="users">用户授权</div>
+                </div>
+
+                <!-- 角色管理内容 -->
+                <div id="roles" class="tab-content">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center">
+                            <input type="text" class="px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300 mr-2" placeholder="搜索角色名称" />
+                            <button class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300">
+                                <i class="fas fa-search mr-1"></i> 搜索
+                            </button>
+                        </div>
+                        <button class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300 flex items-center">
+                            <i class="fas fa-plus mr-2"></i> 新建角色
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>角色名称</th>
+                                    <th>角色编码</th>
+                                    <th>角色描述</th>
+                                    <th>创建时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>超级管理员</td>
+                                    <td>SUPER_ADMIN</td>
+                                    <td>系统最高权限，可以操作系统所有功能</td>
+                                    <td>2023-01-01 00:00:00</td>
+                                    <td><span class="tag tag-green">启用</span></td>
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:underline">编辑</button>
+                                            <button class="text-primary hover:underline">权限</button>
+                                            <button class="text-text-tertiary hover:underline" disabled>删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>管理员</td>
+                                    <td>ADMIN</td>
+                                    <td>系统管理员，可以操作大部分功能，但无法修改关键系统设置</td>
+                                    <td>2023-01-01 00:00:00</td>
+                                    <td><span class="tag tag-green">启用</span></td>
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:underline">编辑</button>
+                                            <button class="text-primary hover:underline">权限</button>
+                                            <button class="text-error hover:underline">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>前台接待</td>
+                                    <td>RECEPTIONIST</td>
+                                    <td>前台接待人员，负责用户接待、预约登记等</td>
+                                    <td>2023-01-01 00:00:00</td>
+                                    <td><span class="tag tag-green">启用</span></td>
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:underline">编辑</button>
+                                            <button class="text-primary hover:underline">权限</button>
+                                            <button class="text-error hover:underline">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>医疗人员</td>
+                                    <td>MEDICAL_STAFF</td>
+                                    <td>医生、护士等医疗人员，负责医疗服务相关操作</td>
+                                    <td>2023-01-01 00:00:00</td>
+                                    <td><span class="tag tag-green">启用</span></td>
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:underline">编辑</button>
+                                            <button class="text-primary hover:underline">权限</button>
+                                            <button class="text-error hover:underline">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>财务人员</td>
+                                    <td>FINANCIAL_STAFF</td>
+                                    <td>财务部门人员，负责订单支付、退款等财务相关操作</td>
+                                    <td>2023-01-01 00:00:00</td>
+                                    <td><span class="tag tag-green">启用</span></td>
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:underline">编辑</button>
+                                            <button class="text-primary hover:underline">权限</button>
+                                            <button class="text-error hover:underline">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>数据分析师</td>
+                                    <td>DATA_ANALYST</td>
+                                    <td>数据分析人员，负责数据统计、报表生成等</td>
+                                    <td>2023-01-01 00:00:00</td>
+                                    <td><span class="tag tag-red">禁用</span></td>
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:underline">编辑</button>
+                                            <button class="text-primary hover:underline">权限</button>
+                                            <button class="text-error hover:underline">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页 -->
+                    <div class="flex justify-between items-center mt-4">
+                        <div class="text-text-secondary">
+                            共 6 条记录，每页显示 10 条
+                        </div>
+                        <div class="flex">
+                            <button class="w-8 h-8 border border-border-color rounded-md flex items-center justify-center mr-2 text-text-tertiary">
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <button class="w-8 h-8 border border-primary bg-primary text-white rounded-md flex items-center justify-center mr-2">
+                                1
+                            </button>
+                            <button class="w-8 h-8 border border-border-color rounded-md flex items-center justify-center text-text-tertiary">
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 权限配置内容 -->
+                <div id="permissions" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center">
+                            <select class="px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300 mr-2">
+                                <option>选择角色</option>
+                                <option selected>管理员</option>
+                                <option>前台接待</option>
+                                <option>医疗人员</option>
+                                <option>财务人员</option>
+                                <option>数据分析师</option>
+                            </select>
+                        </div>
+                        <div class="flex space-x-4">
+                            <button class="px-4 py-2 border border-primary text-primary rounded-md hover:bg-blue-50 transition duration-300">
+                                <i class="fas fa-sync-alt mr-2"></i> 重置
+                            </button>
+                            <button class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300">
+                                <i class="fas fa-save mr-2"></i> 保存
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 权限组 - 系统管理 -->
+                    <div class="permission-group">
+                        <div class="permission-group-header">
+                            <div class="permission-group-title">
+                                <i class="fas fa-cog mr-2"></i> 系统管理
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="system-all" class="mr-2" checked />
+                                <label for="system-all" class="text-text-secondary">全选</label>
+                            </div>
+                        </div>
+                        <div class="permission-group-content">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="permission-item">
+                                    <input type="checkbox" id="system-view" checked />
+                                    <label for="system-view" class="permission-item-label">查看</label>
+                                    <span class="permission-item-description">(系统设置页面查看权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="system-edit" checked />
+                                    <label for="system-edit" class="permission-item-label">编辑</label>
+                                    <span class="permission-item-description">(系统参数修改权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="system-role" checked />
+                                    <label for="system-role" class="permission-item-label">角色管理</label>
+                                    <span class="permission-item-description">(角色增删改查权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="system-permission" checked />
+                                    <label for="system-permission" class="permission-item-label">权限配置</label>
+                                    <span class="permission-item-description">(权限分配权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="system-log" checked />
+                                    <label for="system-log" class="permission-item-label">日志查看</label>
+                                    <span class="permission-item-description">(系统日志查看权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="system-backup" checked />
+                                    <label for="system-backup" class="permission-item-label">数据备份</label>
+                                    <span class="permission-item-description">(数据备份与恢复权限)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 权限组 - 用户管理 -->
+                    <div class="permission-group mt-4">
+                        <div class="permission-group-header">
+                            <div class="permission-group-title">
+                                <i class="fas fa-users mr-2"></i> 用户管理
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="user-all" class="mr-2" checked />
+                                <label for="user-all" class="text-text-secondary">全选</label>
+                            </div>
+                        </div>
+                        <div class="permission-group-content">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="permission-item">
+                                    <input type="checkbox" id="user-view" checked />
+                                    <label for="user-view" class="permission-item-label">查看</label>
+                                    <span class="permission-item-description">(用户列表查看权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="user-add" checked />
+                                    <label for="user-add" class="permission-item-label">新增</label>
+                                    <span class="permission-item-description">(创建新用户权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="user-edit" checked />
+                                    <label for="user-edit" class="permission-item-label">编辑</label>
+                                    <span class="permission-item-description">(修改用户信息权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="user-delete" checked />
+                                    <label for="user-delete" class="permission-item-label">删除</label>
+                                    <span class="permission-item-description">(删除用户权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="user-import" checked />
+                                    <label for="user-import" class="permission-item-label">导入</label>
+                                    <span class="permission-item-description">(批量导入用户权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="user-export" checked />
+                                    <label for="user-export" class="permission-item-label">导出</label>
+                                    <span class="permission-item-description">(导出用户数据权限)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 权限组 - 就诊人管理 -->
+                    <div class="permission-group mt-4">
+                        <div class="permission-group-header">
+                            <div class="permission-group-title">
+                                <i class="fas fa-user-injured mr-2"></i> 就诊人管理
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="patient-all" class="mr-2" checked />
+                                <label for="patient-all" class="text-text-secondary">全选</label>
+                            </div>
+                        </div>
+                        <div class="permission-group-content">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="permission-item">
+                                    <input type="checkbox" id="patient-view" checked />
+                                    <label for="patient-view" class="permission-item-label">查看</label>
+                                    <span class="permission-item-description">(就诊人列表查看权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="patient-add" checked />
+                                    <label for="patient-add" class="permission-item-label">新增</label>
+                                    <span class="permission-item-description">(创建新就诊人权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="patient-edit" checked />
+                                    <label for="patient-edit" class="permission-item-label">编辑</label>
+                                    <span class="permission-item-description">(修改就诊人信息权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="patient-delete" checked />
+                                    <label for="patient-delete" class="permission-item-label">删除</label>
+                                    <span class="permission-item-description">(删除就诊人权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="patient-medical" checked />
+                                    <label for="patient-medical" class="permission-item-label">医疗记录</label>
+                                    <span class="permission-item-description">(查看医疗记录权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="patient-associate" checked />
+                                    <label for="patient-associate" class="permission-item-label">关联用户</label>
+                                    <span class="permission-item-description">(关联用户操作权限)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 权限组 - 订单管理 -->
+                    <div class="permission-group mt-4">
+                        <div class="permission-group-header">
+                            <div class="permission-group-title">
+                                <i class="fas fa-shopping-cart mr-2"></i> 订单管理
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="order-all" class="mr-2" checked />
+                                <label for="order-all" class="text-text-secondary">全选</label>
+                            </div>
+                        </div>
+                        <div class="permission-group-content">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="permission-item">
+                                    <input type="checkbox" id="order-view" checked />
+                                    <label for="order-view" class="permission-item-label">查看</label>
+                                    <span class="permission-item-description">(订单列表查看权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="order-create" checked />
+                                    <label for="order-create" class="permission-item-label">创建</label>
+                                    <span class="permission-item-description">(创建新订单权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="order-edit" checked />
+                                    <label for="order-edit" class="permission-item-label">编辑</label>
+                                    <span class="permission-item-description">(修改订单信息权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="order-cancel" checked />
+                                    <label for="order-cancel" class="permission-item-label">取消</label>
+                                    <span class="permission-item-description">(取消订单权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="order-payment" checked />
+                                    <label for="order-payment" class="permission-item-label">支付管理</label>
+                                    <span class="permission-item-description">(支付相关操作权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="order-refund" checked />
+                                    <label for="order-refund" class="permission-item-label">退款管理</label>
+                                    <span class="permission-item-description">(退款相关操作权限)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 权限组 - 数据分析 -->
+                    <div class="permission-group mt-4">
+                        <div class="permission-group-header">
+                            <div class="permission-group-title">
+                                <i class="fas fa-chart-line mr-2"></i> 数据分析
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="analytics-all" class="mr-2" checked />
+                                <label for="analytics-all" class="text-text-secondary">全选</label>
+                            </div>
+                        </div>
+                        <div class="permission-group-content">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="permission-item">
+                                    <input type="checkbox" id="analytics-view" checked />
+                                    <label for="analytics-view" class="permission-item-label">查看</label>
+                                    <span class="permission-item-description">(数据分析页面查看权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="analytics-export" checked />
+                                    <label for="analytics-export" class="permission-item-label">导出</label>
+                                    <span class="permission-item-description">(导出报表数据权限)</span>
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" id="analytics-custom" checked />
+                                    <label for="analytics-custom" class="permission-item-label">自定义报表</label>
+                                    <span class="permission-item-description">(创建自定义报表权限)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户授权内容 -->
+                <div id="users" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center">
+                            <input type="text" class="px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300 mr-2" placeholder="搜索用户名称" />
+                            <select class="px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300 mr-2">
+                                <option>所有角色</option>
+                                <option>管理员</option>
+                                <option>前台接待</option>
+                                <option>医疗人员</option>
+                                <option>财务人员</option>
+                                <option>数据分析师</option>
+                            </select>
+                            <button class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300">
+                                <i class="fas fa-search mr-1"></i> 搜索
+                            </button>
+                        </div>
+                        <button class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300 flex items-center">
+                            <i class="fas fa-user-plus mr-2"></i> 新建用户
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>用户名</th>
+                                    <th>姓名</th>
+                                    <th>角色</th>
+                                    <th>部门</th>
+                                    <th>手机号</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>admin</td>
+                                    <td>系统管理员</td>
+                                    <td>超级管理员</td>
+                                    <td>系统管理部</td>
+                                    <td>13800138000</td>
+                                    <td><span class="tag tag-green">启用</span></td>
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:underline">编辑</button>
+                                            <button class="text-primary hover:underline">授权</button>
+                                            <button class="text-text-tertiary hover:underline" disabled>删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>zhangsan</td>
+                                    <td>张三</td>
+                                    <td>管理员</td>
+                                    <td>系统管理部</td>
+                                    <td>13800138001</td>
+                                    <td><span class="tag tag-green">启用</span></td>
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:underline">编辑</button>
+                                            <button class="text-primary hover:underline">授权</button>
+                                            <button class="text-error hover:underline">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>lisi</td>
+                                    <td>李四</td>
+                                    <td>前台接待</td>
+                                    <td>前台部</td>
+                                    <td>13800138002</td>
+                                    <td><span class="tag tag-green">启用</span></td>
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:underline">编辑</button>
+                                            <button class="text-primary hover:underline">授权</button>
+                                            <button class="text-error hover:underline">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>wangwu</td>
+                                    <td>王五</td>
+                                    <td>医疗人员</td>
+                                    <td>医疗部</td>
+                                    <td>13800138003</td>
+                                    <td><span class="tag tag-green">启用</span></td>
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:underline">编辑</button>
+                                            <button class="text-primary hover:underline">授权</button>
+                                            <button class="text-error hover:underline">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>zhaoliu</td>
+                                    <td>赵六</td>
+                                    <td>财务人员</td>
+                                    <td>财务部</td>
+                                    <td>13800138004</td>
+                                    <td><span class="tag tag-green">启用</span></td>
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:underline">编辑</button>
+                                            <button class="text-primary hover:underline">授权</button>
+                                            <button class="text-error hover:underline">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>sunqi</td>
+                                    <td>孙七</td>
+                                    <td>数据分析师</td>
+                                    <td>数据部</td>
+                                    <td>13800138005</td>
+                                    <td><span class="tag tag-red">禁用</span></td>
+                                    <td>
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:underline">编辑</button>
+                                            <button class="text-primary hover:underline">授权</button>
+                                            <button class="text-error hover:underline">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页 -->
+                    <div class="flex justify-between items-center mt-4">
+                        <div class="text-text-secondary">
+                            共 6 条记录，每页显示 10 条
+                        </div>
+                        <div class="flex">
+                            <button class="w-8 h-8 border border-border-color rounded-md flex items-center justify-center mr-2 text-text-tertiary">
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <button class="w-8 h-8 border border-primary bg-primary text-white rounded-md flex items-center justify-center mr-2">
+                                1
+                            </button>
+                            <button class="w-8 h-8 border border-border-color rounded-md flex items-center justify-center text-text-tertiary">
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 选项卡切换逻辑
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 移除所有选项卡的激活状态
+                document.querySelectorAll('.tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                
+                // 隐藏所有内容区域
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // 激活当前选项卡
+                this.classList.add('active');
+                
+                // 显示对应的内容区域
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.remove('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人设置 - 医疗CRM管理后台系统</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1890FF',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        error: '#F5222D',
+                        'text-primary': '#262626',
+                        'text-secondary': '#595959',
+                        'text-tertiary': '#8C8C8C',
+                        'border-color': '#D9D9D9',
+                        'bg-light': '#F5F5F5',
+                        'bg-lighter': '#FAFAFA',
+                        'menu-dark': '#001529',
+                        'menu-dark-active': '#1890FF',
+                    },
+                    boxShadow: {
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.09)',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            background-color: #F5F5F5;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #001529;
+            color: rgba(255, 255, 255, 0.65);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .sidebar-logo {
+            height: 64px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            background-color: #002140;
+        }
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+        .sidebar-menu-item {
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .sidebar-menu-item:hover {
+            color: white;
+        }
+        .sidebar-menu-item.active {
+            background-color: #1890FF;
+            color: white;
+        }
+        .sidebar-menu-item i {
+            margin-right: 10px;
+            width: 16px;
+            text-align: center;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 200px;
+            right: 0;
+            height: 64px;
+            background-color: white;
+            box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+        .content {
+            margin-left: 200px;
+            padding: 88px 24px 24px;
+            min-height: 100vh;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background-color: #F5222D;
+            color: white;
+            font-size: 12px;
+            line-height: 16px;
+            text-align: center;
+            padding: 0 4px;
+        }
+        .settings-menu {
+            width: 200px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+            overflow: hidden;
+        }
+        .settings-menu-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #595959;
+            display: flex;
+            align-items: center;
+        }
+        .settings-menu-item:hover {
+            color: #1890FF;
+            background-color: #F5F5F5;
+        }
+        .settings-menu-item.active {
+            color: #1890FF;
+            background-color: #E6F7FF;
+            border-right: 3px solid #1890FF;
+        }
+        .settings-menu-item i {
+            margin-right: 10px;
+            width: 16px;
+            text-align: center;
+        }
+        .settings-content {
+            flex: 1;
+            margin-left: 24px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+            padding: 24px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #F0F0F0;
+            margin-bottom: 16px;
+        }
+        .tab {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 32px;
+            color: #595959;
+            position: relative;
+        }
+        .tab:hover {
+            color: #1890FF;
+        }
+        .tab.active {
+            color: #1890FF;
+            font-weight: 500;
+        }
+        .tab.active:after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #1890FF;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #262626;
+        }
+        .form-help {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #8C8C8C;
+        }
+        .avatar-uploader {
+            width: 128px;
+            height: 128px;
+            border: 1px dashed #D9D9D9;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+            position: relative;
+        }
+        .avatar-uploader:hover {
+            border-color: #1890FF;
+        }
+        .avatar-uploader img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .avatar-uploader-text {
+            margin-top: 8px;
+            color: #8C8C8C;
+            font-size: 12px;
+        }
+        .avatar-uploader-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        .avatar-uploader:hover .avatar-uploader-overlay {
+            opacity: 1;
+        }
+        .notification-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #F0F0F0;
+        }
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        .notification-title {
+            font-weight: 500;
+            color: #262626;
+            margin-bottom: 4px;
+        }
+        .notification-description {
+            color: #8C8C8C;
+            font-size: 12px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 22px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #1890FF;
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边导航 -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <i class="fas fa-hospital text-primary text-xl mr-2"></i>
+            <span class="text-white font-medium">医疗CRM系统</span>
+        </div>
+        <div class="sidebar-menu">
+            <div class="sidebar-menu-item" onclick="window.location.href='dashboard.html'">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>工作台</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='user-list.html'">
+                <i class="fas fa-users"></i>
+                <span>用户管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='patient-list.html'">
+                <i class="fas fa-user-injured"></i>
+                <span>就诊人管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='order-list.html'">
+                <i class="fas fa-shopping-cart"></i>
+                <span>订单管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='analytics-overview.html'">
+                <i class="fas fa-chart-line"></i>
+                <span>数据分析</span>
+            </div>
+            <div class="sidebar-menu-item active">
+                <i class="fas fa-cog"></i>
+                <span>系统设置</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <div class="header">
+        <div class="flex-1 flex items-center">
+            <i class="fas fa-bars text-text-secondary text-lg cursor-pointer hover:text-primary"></i>
+            <div class="ml-6 flex">
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">首页</div>
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">帮助文档</div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-6">
+            <div class="relative cursor-pointer">
+                <i class="fas fa-bell text-text-secondary text-lg hover:text-primary"></i>
+                <span class="notification-badge">5</span>
+            </div>
+            <div class="flex items-center cursor-pointer">
+                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                     alt="用户头像" class="w-8 h-8 rounded-full mr-2" />
+                <span class="text-text-secondary">管理员</span>
+                <i class="fas fa-chevron-down text-text-tertiary ml-1 text-xs"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 内容区 -->
+    <div class="content">
+        <!-- 面包屑导航 -->
+        <div class="flex items-center text-text-secondary mb-6">
+            <a href="dashboard.html" class="hover:text-primary">首页</a>
+            <i class="fas fa-angle-right mx-2 text-xs"></i>
+            <span class="text-text-primary">个人设置</span>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-text-primary">个人设置</h1>
+        </div>
+
+        <!-- 设置内容 -->
+        <div class="flex">
+            <!-- 设置菜单 -->
+            <div class="settings-menu">
+                <div class="settings-menu-item" onclick="window.location.href='settings-permissions.html'">
+                    <i class="fas fa-user-shield"></i>
+                    <span>权限管理</span>
+                </div>
+                <div class="settings-menu-item" onclick="window.location.href='settings-parameters.html'">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>系统参数</span>
+                </div>
+                <div class="settings-menu-item">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>字典管理</span>
+                </div>
+                <div class="settings-menu-item">
+                    <i class="fas fa-history"></i>
+                    <span>操作日志</span>
+                </div>
+                <div class="settings-menu-item">
+                    <i class="fas fa-database"></i>
+                    <span>数据备份</span>
+                </div>
+                <div class="settings-menu-item">
+                    <i class="fas fa-plug"></i>
+                    <span>系统集成</span>
+                </div>
+                <div class="settings-menu-item">
+                    <i class="fas fa-bell"></i>
+                    <span>消息通知</span>
+                </div>
+                <div class="settings-menu-item active">
+                    <i class="fas fa-user-cog"></i>
+                    <span>个人设置</span>
+                </div>
+            </div>
+
+            <!-- 设置内容 -->
+            <div class="settings-content">
+                <!-- 选项卡 -->
+                <div class="tabs">
+                    <div class="tab active" data-tab="basic">基本资料</div>
+                    <div class="tab" data-tab="security">安全设置</div>
+                    <div class="tab" data-tab="notification">消息通知</div>
+                </div>
+
+                <!-- 基本资料内容 -->
+                <div id="basic" class="tab-content">
+                    <div class="flex">
+                        <!-- 左侧头像上传 -->
+                        <div class="mr-12">
+                            <div class="form-label mb-4">头像</div>
+                            <div class="avatar-uploader">
+                                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                                <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" alt="用户头像" />
+                                <div class="avatar-uploader-overlay">
+                                    <i class="fas fa-camera text-white text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="form-help mt-4 text-center">点击更换头像<br>支持 JPG、PNG 格式，最大 2MB</div>
+                        </div>
+
+                        <!-- 右侧表单 -->
+                        <div class="flex-1">
+                            <form>
+                                <!-- 用户名 -->
+                                <div class="form-group">
+                                    <label class="form-label">用户名</label>
+                                    <input type="text" class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" value="admin" disabled />
+                                    <div class="form-help">用户名不可修改</div>
+                                </div>
+
+                                <!-- 姓名 -->
+                                <div class="form-group">
+                                    <label class="form-label">姓名</label>
+                                    <input type="text" class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" value="系统管理员" />
+                                </div>
+
+                                <!-- 性别 -->
+                                <div class="form-group">
+                                    <label class="form-label">性别</label>
+                                    <div class="flex space-x-4">
+                                        <div class="flex items-center">
+                                            <input type="radio" id="gender-male" name="gender" class="mr-2" />
+                                            <label for="gender-male">男</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="radio" id="gender-female" name="gender" class="mr-2" checked />
+                                            <label for="gender-female">女</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="radio" id="gender-other" name="gender" class="mr-2" />
+                                            <label for="gender-other">其他</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 手机号 -->
+                                <div class="form-group">
+                                    <label class="form-label">手机号</label>
+                                    <input type="text" class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" value="13800138000" />
+                                </div>
+
+                                <!-- 邮箱 -->
+                                <div class="form-group">
+                                    <label class="form-label">邮箱</label>
+                                    <input type="email" class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" value="admin@example.com" />
+                                </div>
+
+                                <!-- 所属部门 -->
+                                <div class="form-group">
+                                    <label class="form-label">所属部门</label>
+                                    <input type="text" class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" value="系统管理部" disabled />
+                                    <div class="form-help">部门信息不可修改，如需变更请联系管理员</div>
+                                </div>
+
+                                <!-- 个人简介 -->
+                                <div class="form-group">
+                                    <label class="form-label">个人简介</label>
+                                    <textarea class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300 h-24" placeholder="请输入个人简介">系统管理员，负责系统的日常维护和管理工作。</textarea>
+                                </div>
+
+                                <!-- 保存按钮 -->
+                                <div class="flex justify-end mt-8">
+                                    <button class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300">
+                                        <i class="fas fa-save mr-2"></i> 保存修改
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 安全设置内容 -->
+                <div id="security" class="tab-content hidden">
+                    <form>
+                        <!-- 修改密码 -->
+                        <div class="p-6 border border-border-color rounded-md mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <div class="text-text-primary font-medium">账户密码</div>
+                                    <div class="text-text-tertiary text-sm mt-1">定期修改密码可以提高账户安全性</div>
+                                </div>
+                                <button class="px-4 py-2 border border-primary text-primary rounded-md hover:bg-blue-50 transition duration-300" id="change-password-btn">
+                                    修改
+                                </button>
+                            </div>
+                            <div id="change-password-form" class="hidden mt-4 pt-4 border-t border-border-color">
+                                <div class="form-group">
+                                    <label class="form-label">当前密码</label>
+                                    <input type="password" class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" placeholder="请输入当前密码" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">新密码</label>
+                                    <input type="password" class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" placeholder="请输入新密码" />
+                                    <div class="form-help">密码长度至少为8位，必须包含大小写字母和数字</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">确认新密码</label>
+                                    <input type="password" class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" placeholder="请再次输入新密码" />
+                                </div>
+                                <div class="flex justify-end space-x-4">
+                                    <button type="button" class="px-4 py-2 border border-border-color text-text-secondary rounded-md hover:bg-gray-50 transition duration-300" id="cancel-password-btn">
+                                        取消
+                                    </button>
+                                    <button class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300">
+                                        确认修改
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 绑定手机 -->
+                        <div class="p-6 border border-border-color rounded-md mb-6">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="text-text-primary font-medium">绑定手机</div>
+                                    <div class="text-text-tertiary text-sm mt-1">已绑定手机：138****8000</div>
+                                </div>
+                                <button class="px-4 py-2 border border-primary text-primary rounded-md hover:bg-blue-50 transition duration-300">
+                                    修改
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 绑定邮箱 -->
+                        <div class="p-6 border border-border-color rounded-md mb-6">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="text-text-primary font-medium">绑定邮箱</div>
+                                    <div class="text-text-tertiary text-sm mt-1">已绑定邮箱：a****n@example.com</div>
+                                </div>
+                                <button class="px-4 py-2 border border-primary text-primary rounded-md hover:bg-blue-50 transition duration-300">
+                                    修改
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 登录设备 -->
+                        <div class="p-6 border border-border-color rounded-md mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <div class="text-text-primary font-medium">登录设备</div>
+                                    <div class="text-text-tertiary text-sm mt-1">最近登录的设备列表</div>
+                                </div>
+                                <button class="px-4 py-2 border border-error text-error rounded-md hover:bg-red-50 transition duration-300">
+                                    <i class="fas fa-sign-out-alt mr-2"></i> 退出所有设备
+                                </button>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex items-center justify-between py-3 border-b border-border-color">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-laptop text-2xl text-text-tertiary mr-4"></i>
+                                        <div>
+                                            <div class="text-text-primary">MacBook Pro (当前设备)</div>
+                                            <div class="text-text-tertiary text-sm mt-1">上海市 · Chrome浏览器 · 最近登录于 2023-06-20 10:30:45</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-success">在线</div>
+                                </div>
+                                <div class="flex items-center justify-between py-3 border-b border-border-color">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-mobile-alt text-2xl text-text-tertiary mr-4"></i>
+                                        <div>
+                                            <div class="text-text-primary">iPhone 13</div>
+                                            <div class="text-text-tertiary text-sm mt-1">上海市 · Safari浏览器 · 最近登录于 2023-06-19 18:15:22</div>
+                                        </div>
+                                    </div>
+                                    <button class="text-error hover:underline">退出</button>
+                                </div>
+                                <div class="flex items-center justify-between py-3">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-desktop text-2xl text-text-tertiary mr-4"></i>
+                                        <div>
+                                            <div class="text-text-primary">Windows PC</div>
+                                            <div class="text-text-tertiary text-sm mt-1">北京市 · Edge浏览器 · 最近登录于 2023-06-15 09:45:10</div>
+                                        </div>
+                                    </div>
+                                    <button class="text-error hover:underline">退出</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 登录日志 -->
+                        <div class="p-6 border border-border-color rounded-md">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <div class="text-text-primary font-medium">登录日志</div>
+                                    <div class="text-text-tertiary text-sm mt-1">记录您的账号登录情况</div>
+                                </div>
+                                <button class="px-4 py-2 border border-primary text-primary rounded-md hover:bg-blue-50 transition duration-300">
+                                    查看更多
+                                </button>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex items-center justify-between py-3 border-b border-border-color">
+                                    <div>
+                                        <div class="text-text-primary">登录成功</div>
+                                        <div class="text-text-tertiary text-sm mt-1">IP: 192.168.1.100 · 上海市 · Chrome浏览器</div>
+                                    </div>
+                                    <div class="text-text-tertiary">2023-06-20 10:30:45</div>
+                                </div>
+                                <div class="flex items-center justify-between py-3 border-b border-border-color">
+                                    <div>
+                                        <div class="text-text-primary">登录成功</div>
+                                        <div class="text-text-tertiary text-sm mt-1">IP: 192.168.1.101 · 上海市 · Safari浏览器</div>
+                                    </div>
+                                    <div class="text-text-tertiary">2023-06-19 18:15:22</div>
+                                </div>
+                                <div class="flex items-center justify-between py-3">
+                                    <div>
+                                        <div class="text-error">登录失败</div>
+                                        <div class="text-text-tertiary text-sm mt-1">IP: 192.168.1.102 · 北京市 · Edge浏览器 · 密码错误</div>
+                                    </div>
+                                    <div class="text-text-tertiary">2023-06-18 14:20:30</div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 消息通知内容 -->
+                <div id="notification" class="tab-content hidden">
+                    <!-- 系统消息 -->
+                    <div class="p-6 border border-border-color rounded-md mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="text-text-primary font-medium">系统消息</div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="text-text-tertiary text-sm">接收系统更新、维护等相关通知</div>
+                    </div>
+
+                    <!-- 订单消息 -->
+                    <div class="p-6 border border-border-color rounded-md mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="text-text-primary font-medium">订单消息</div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="text-text-tertiary text-sm">接收订单创建、支付、退款等相关通知</div>
+                    </div>
+
+                    <!-- 用户消息 -->
+                    <div class="p-6 border border-border-color rounded-md mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="text-text-primary font-medium">用户消息</div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="text-text-tertiary text-sm">接收用户注册、信息变更等相关通知</div>
+                    </div>
+
+                    <!-- 安全消息 -->
+                    <div class="p-6 border border-border-color rounded-md mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="text-text-primary font-medium">安全消息</div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="text-text-tertiary text-sm">接收账户登录、密码修改等安全相关通知</div>
+                    </div>
+
+                    <!-- 通知方式 -->
+                    <div class="p-6 border border-border-color rounded-md">
+                        <div class="text-text-primary font-medium mb-4">通知方式</div>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="text-text-primary">站内消息</div>
+                                    <div class="text-text-tertiary text-sm mt-1">在系统内接收通知</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="text-text-primary">邮件通知</div>
+                                    <div class="text-text-tertiary text-sm mt-1">通过邮件接收通知</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="text-text-primary">短信通知</div>
+                                    <div class="text-text-tertiary text-sm mt-1">通过短信接收通知</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 保存按钮 -->
+                    <div class="flex justify-end mt-8">
+                        <button class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300">
+                            <i class="fas fa-save mr-2"></i> 保存设置
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 选项卡切换逻辑
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 移除所有选项卡的激活状态
+                document.querySelectorAll('.tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                
+                // 隐藏所有内容区域
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // 激活当前选项卡
+                this.classList.add('active');
+                
+                // 显示对应的内容区域
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.remove('hidden');
+            });
+        });
+
+        // 修改密码表单显示/隐藏逻辑
+        document.getElementById('change-password-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('change-password-form').classList.remove('hidden');
+            this.classList.add('hidden');
+        });
+
+        document.getElementById('cancel-password-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('change-password-form').classList.add('hidden');
+            document.getElementById('change-password-btn').classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>

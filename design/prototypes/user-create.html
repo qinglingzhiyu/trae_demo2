@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建用户 - 医疗CRM管理后台系统</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1890FF',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        error: '#F5222D',
+                        'text-primary': '#262626',
+                        'text-secondary': '#595959',
+                        'text-tertiary': '#8C8C8C',
+                        'border-color': '#D9D9D9',
+                        'bg-light': '#F5F5F5',
+                        'bg-lighter': '#FAFAFA',
+                        'menu-dark': '#001529',
+                        'menu-dark-active': '#1890FF',
+                    },
+                    boxShadow: {
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.09)',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            background-color: #F5F5F5;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #001529;
+            color: rgba(255, 255, 255, 0.65);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .sidebar-logo {
+            height: 64px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            background-color: #002140;
+        }
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+        .sidebar-menu-item {
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .sidebar-menu-item:hover {
+            color: white;
+        }
+        .sidebar-menu-item.active {
+            background-color: #1890FF;
+            color: white;
+        }
+        .sidebar-menu-item i {
+            margin-right: 10px;
+            width: 16px;
+            text-align: center;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 200px;
+            right: 0;
+            height: 64px;
+            background-color: white;
+            box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+        .content {
+            margin-left: 200px;
+            padding: 88px 24px 24px;
+            min-height: 100vh;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background-color: #F5222D;
+            color: white;
+            font-size: 12px;
+            line-height: 16px;
+            text-align: center;
+            padding: 0 4px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #262626;
+            font-size: 14px;
+        }
+        .form-label.required::after {
+            content: '*';
+            color: #F5222D;
+            margin-left: 4px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #D9D9D9;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #1890FF;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+        .form-input.error {
+            border-color: #F5222D;
+        }
+        .form-error {
+            color: #F5222D;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .form-help {
+            color: #8C8C8C;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #D9D9D9;
+            border-radius: 4px;
+            background-color: white;
+            transition: all 0.3s;
+        }
+        .form-select:focus {
+            outline: none;
+            border-color: #1890FF;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+        .form-checkbox {
+            margin-right: 8px;
+        }
+        .form-radio {
+            margin-right: 8px;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        .form-divider {
+            height: 1px;
+            background-color: #F0F0F0;
+            margin: 24px 0;
+        }
+        .steps {
+            display: flex;
+            margin-bottom: 32px;
+        }
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #F5F5F5;
+            color: #8C8C8C;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 8px;
+            border: 1px solid #D9D9D9;
+            position: relative;
+            z-index: 1;
+        }
+        .step-title {
+            color: #8C8C8C;
+            font-size: 14px;
+        }
+        .step.active .step-number {
+            background-color: #1890FF;
+            color: white;
+            border-color: #1890FF;
+        }
+        .step.active .step-title {
+            color: #1890FF;
+            font-weight: 500;
+        }
+        .step.completed .step-number {
+            background-color: #52C41A;
+            color: white;
+            border-color: #52C41A;
+        }
+        .step.completed .step-title {
+            color: #52C41A;
+        }
+        .step-line {
+            position: absolute;
+            top: 16px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: #D9D9D9;
+            z-index: 0;
+        }
+        .step:first-child .step-line {
+            left: 50%;
+        }
+        .step:last-child .step-line {
+            right: 50%;
+        }
+        .step.completed .step-line {
+            background-color: #52C41A;
+        }
+        .step.active .step-line-left {
+            background-color: #52C41A;
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边导航 -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <i class="fas fa-hospital text-primary text-xl mr-2"></i>
+            <span class="text-white font-medium">医疗CRM系统</span>
+        </div>
+        <div class="sidebar-menu">
+            <div class="sidebar-menu-item" onclick="window.location.href='dashboard.html'">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>工作台</span>
+            </div>
+            <div class="sidebar-menu-item active">
+                <i class="fas fa-users"></i>
+                <span>用户管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='patient-list.html'">
+                <i class="fas fa-user-injured"></i>
+                <span>就诊人管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='order-list.html'">
+                <i class="fas fa-shopping-cart"></i>
+                <span>订单管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='analytics-overview.html'">
+                <i class="fas fa-chart-line"></i>
+                <span>数据分析</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='settings-permissions.html'">
+                <i class="fas fa-cog"></i>
+                <span>系统设置</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <div class="header">
+        <div class="flex-1 flex items-center">
+            <i class="fas fa-bars text-text-secondary text-lg cursor-pointer hover:text-primary"></i>
+            <div class="ml-6 flex">
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">首页</div>
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">帮助文档</div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-6">
+            <div class="relative cursor-pointer">
+                <i class="fas fa-bell text-text-secondary text-lg hover:text-primary"></i>
+                <span class="notification-badge">5</span>
+            </div>
+            <div class="flex items-center cursor-pointer">
+                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                     alt="用户头像" class="w-8 h-8 rounded-full mr-2" />
+                <span class="text-text-secondary">管理员</span>
+                <i class="fas fa-chevron-down text-text-tertiary ml-1 text-xs"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 内容区 -->
+    <div class="content">
+        <!-- 面包屑导航 -->
+        <div class="flex items-center text-text-secondary mb-6">
+            <a href="dashboard.html" class="hover:text-primary">首页</a>
+            <i class="fas fa-angle-right mx-2 text-xs"></i>
+            <a href="user-list.html" class="hover:text-primary">用户管理</a>
+            <i class="fas fa-angle-right mx-2 text-xs"></i>
+            <span class="text-text-primary">创建用户</span>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-text-primary">创建用户</h1>
+            <button onclick="window.location.href='user-list.html'" class="px-4 py-2 border border-border-color rounded-md hover:border-primary hover:text-primary transition duration-300 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> 返回列表
+            </button>
+        </div>
+
+        <!-- 步骤条 -->
+        <div class="steps">
+            <div class="step active">
+                <div class="step-line"></div>
+                <div class="step-number">1</div>
+                <div class="step-title">基本信息</div>
+            </div>
+            <div class="step">
+                <div class="step-line"></div>
+                <div class="step-number">2</div>
+                <div class="step-title">账户设置</div>
+            </div>
+            <div class="step">
+                <div class="step-line"></div>
+                <div class="step-number">3</div>
+                <div class="step-title">权限分配</div>
+            </div>
+            <div class="step">
+                <div class="step-line"></div>
+                <div class="step-number">4</div>
+                <div class="step-title">完成</div>
+            </div>
+        </div>
+
+        <!-- 表单卡片 -->
+        <div class="bg-white rounded-md shadow-card p-6 mb-6">
+            <form id="createUserForm">
+                <!-- 第一步：基本信息 -->
+                <div id="step1" class="">
+                    <h2 class="text-lg font-bold text-text-primary mb-6">基本信息</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label for="username" class="form-label required">用户名</label>
+                            <input type="text" id="username" name="username" class="form-input" placeholder="请输入用户名" />
+                            <div class="form-help">用户名将用于登录系统，创建后不可修改</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="realName" class="form-label required">真实姓名</label>
+                            <input type="text" id="realName" name="realName" class="form-input" placeholder="请输入真实姓名" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="mobile" class="form-label required">手机号码</label>
+                            <input type="tel" id="mobile" name="mobile" class="form-input" placeholder="请输入手机号码" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email" class="form-label">电子邮箱</label>
+                            <input type="email" id="email" name="email" class="form-input" placeholder="请输入电子邮箱" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label required">性别</label>
+                            <div class="flex items-center space-x-6 mt-2">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="gender" value="male" class="form-radio h-4 w-4 text-primary" checked />
+                                    <span class="ml-2">男</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="gender" value="female" class="form-radio h-4 w-4 text-primary" />
+                                    <span class="ml-2">女</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="gender" value="other" class="form-radio h-4 w-4 text-primary" />
+                                    <span class="ml-2">其他</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="birthdate" class="form-label">出生日期</label>
+                            <input type="date" id="birthdate" name="birthdate" class="form-input" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="idCard" class="form-label">身份证号</label>
+                            <input type="text" id="idCard" name="idCard" class="form-input" placeholder="请输入身份证号" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="avatar" class="form-label">头像</label>
+                            <div class="flex items-center">
+                                <div class="w-24 h-24 bg-bg-lighter rounded-md flex items-center justify-center mr-4 border border-dashed border-border-color">
+                                    <i class="fas fa-user text-4xl text-text-tertiary"></i>
+                                </div>
+                                <div>
+                                    <button type="button" class="px-4 py-2 border border-border-color rounded-md hover:text-primary hover:border-primary transition duration-300 mb-2">
+                                        <i class="fas fa-upload mr-1"></i> 上传头像
+                                    </button>
+                                    <div class="text-text-tertiary text-xs">支持 JPG、PNG 格式，文件大小不超过 2MB</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address" class="form-label">详细地址</label>
+                        <input type="text" id="address" name="address" class="form-input" placeholder="请输入详细地址" />
+                    </div>
+                    
+                    <div class="form-divider"></div>
+                    
+                    <div class="flex justify-between">
+                        <div></div>
+                        <button type="button" id="nextStep1" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300">
+                            下一步 <i class="fas fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 第二步：账户设置 -->
+                <div id="step2" class="hidden">
+                    <h2 class="text-lg font-bold text-text-primary mb-6">账户设置</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label for="password" class="form-label required">登录密码</label>
+                            <input type="password" id="password" name="password" class="form-input" placeholder="请输入登录密码" />
+                            <div class="form-help">密码长度8-20位，必须包含字母和数字</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirmPassword" class="form-label required">确认密码</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" placeholder="请再次输入登录密码" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="userType" class="form-label required">用户类型</label>
+                            <select id="userType" name="userType" class="form-select">
+                                <option value="">请选择用户类型</option>
+                                <option value="admin">管理员</option>
+                                <option value="operator">操作员</option>
+                                <option value="viewer">查看者</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="department" class="form-label">所属部门</label>
+                            <select id="department" name="department" class="form-select">
+                                <option value="">请选择所属部门</option>
+                                <option value="admin">行政部</option>
+                                <option value="finance">财务部</option>
+                                <option value="medical">医疗部</option>
+                                <option value="it">信息技术部</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">账户状态</label>
+                        <div class="flex items-center space-x-6 mt-2">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="status" value="active" class="form-radio h-4 w-4 text-primary" checked />
+                                <span class="ml-2">启用</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="status" value="inactive" class="form-radio h-4 w-4 text-primary" />
+                                <span class="ml-2">禁用</span>
+                            </label>
+                        </div>
+                        <div class="form-help mt-2">禁用状态的用户将无法登录系统</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">账户设置</label>
+                        <div class="space-y-3 mt-2">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" name="settings[]" value="forcePasswordChange" class="form-checkbox h-4 w-4 text-primary rounded" />
+                                <span class="ml-2">首次登录强制修改密码</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" name="settings[]" value="twoFactorAuth" class="form-checkbox h-4 w-4 text-primary rounded" />
+                                <span class="ml-2">启用两步验证</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" name="settings[]" value="loginNotification" class="form-checkbox h-4 w-4 text-primary rounded" />
+                                <span class="ml-2">登录通知</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-divider"></div>
+                    
+                    <div class="flex justify-between">
+                        <button type="button" id="prevStep2" class="px-6 py-2 border border-border-color rounded-md hover:border-primary hover:text-primary transition duration-300">
+                            <i class="fas fa-arrow-left mr-1"></i> 上一步
+                        </button>
+                        <button type="button" id="nextStep2" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300">
+                            下一步 <i class="fas fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 第三步：权限分配 -->
+                <div id="step3" class="hidden">
+                    <h2 class="text-lg font-bold text-text-primary mb-6">权限分配</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">选择角色</label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <div class="border border-border-color rounded-md p-4 cursor-pointer hover:border-primary transition duration-300">
+                                <div class="flex items-center">
+                                    <input type="radio" name="role" value="admin" class="form-radio h-4 w-4 text-primary" />
+                                    <span class="ml-2 font-medium">系统管理员</span>
+                                </div>
+                                <div class="text-text-tertiary text-sm mt-2">拥有系统所有功能的操作权限</div>
+                            </div>
+                            <div class="border border-primary rounded-md p-4 cursor-pointer hover:border-primary transition duration-300 bg-blue-50">
+                                <div class="flex items-center">
+                                    <input type="radio" name="role" value="operator" class="form-radio h-4 w-4 text-primary" checked />
+                                    <span class="ml-2 font-medium">普通操作员</span>
+                                </div>
+                                <div class="text-text-tertiary text-sm mt-2">拥有日常业务操作权限，无系统管理权限</div>
+                            </div>
+                            <div class="border border-border-color rounded-md p-4 cursor-pointer hover:border-primary transition duration-300">
+                                <div class="flex items-center">
+                                    <input type="radio" name="role" value="viewer" class="form-radio h-4 w-4 text-primary" />
+                                    <span class="ml-2 font-medium">只读用户</span>
+                                </div>
+                                <div class="text-text-tertiary text-sm mt-2">只能查看数据，无任何修改权限</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mt-6">
+                        <label class="form-label">自定义权限</label>
+                        <div class="mt-4">
+                            <div class="border border-border-color rounded-md overflow-hidden">
+                                <!-- 用户管理权限 -->
+                                <div class="border-b border-border-color">
+                                    <div class="flex items-center p-4 bg-bg-lighter">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="userManagement" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2 font-medium">用户管理</span>
+                                        </label>
+                                    </div>
+                                    <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="user.view" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">查看用户</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="user.create" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">创建用户</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="user.edit" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">编辑用户</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="user.delete" class="form-checkbox h-4 w-4 text-primary rounded" />
+                                            <span class="ml-2">删除用户</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="user.export" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">导出用户</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- 就诊人管理权限 -->
+                                <div class="border-b border-border-color">
+                                    <div class="flex items-center p-4 bg-bg-lighter">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="patientManagement" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2 font-medium">就诊人管理</span>
+                                        </label>
+                                    </div>
+                                    <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="patient.view" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">查看就诊人</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="patient.create" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">创建就诊人</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="patient.edit" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">编辑就诊人</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="patient.delete" class="form-checkbox h-4 w-4 text-primary rounded" />
+                                            <span class="ml-2">删除就诊人</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="patient.export" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">导出就诊人</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- 订单管理权限 -->
+                                <div class="border-b border-border-color">
+                                    <div class="flex items-center p-4 bg-bg-lighter">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="orderManagement" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2 font-medium">订单管理</span>
+                                        </label>
+                                    </div>
+                                    <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="order.view" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">查看订单</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="order.create" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">创建订单</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="order.edit" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">编辑订单</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="order.cancel" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">取消订单</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="order.refund" class="form-checkbox h-4 w-4 text-primary rounded" />
+                                            <span class="ml-2">订单退款</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="order.export" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">导出订单</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- 数据分析权限 -->
+                                <div>
+                                    <div class="flex items-center p-4 bg-bg-lighter">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="dataAnalysis" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2 font-medium">数据分析</span>
+                                        </label>
+                                    </div>
+                                    <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="data.dashboard" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">数据概览</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="data.reports" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">报表查看</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" name="permissions[]" value="data.export" class="form-checkbox h-4 w-4 text-primary rounded" checked />
+                                            <span class="ml-2">数据导出</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-divider"></div>
+                    
+                    <div class="flex justify-between">
+                        <button type="button" id="prevStep3" class="px-6 py-2 border border-border-color rounded-md hover:border-primary hover:text-primary transition duration-300">
+                            <i class="fas fa-arrow-left mr-1"></i> 上一步
+                        </button>
+                        <button type="button" id="nextStep3" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300">
+                            下一步 <i class="fas fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 第四步：完成 -->
+                <div id="step4" class="hidden">
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-success bg-opacity-10 text-success text-2xl mb-4">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-text-primary mb-2">用户创建成功</h2>
+                        <p class="text-text-secondary mb-6">新用户已成功创建，可以开始使用系统</p>
+                        
+                        <div class="max-w-md mx-auto bg-bg-lighter rounded-md p-4 mb-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-text-secondary">用户名</span>
+                                <span class="text-text-primary font-medium">zhangxiaohong</span>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-text-secondary">真实姓名</span>
+                                <span class="text-text-primary font-medium">张小红</span>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-text-secondary">手机号码</span>
+                                <span class="text-text-primary font-medium">13800138001</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-text-secondary">用户角色</span>
+                                <span class="text-text-primary font-medium">普通操作员</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-center space-x-4">
+                            <button type="button" onclick="window.location.href='user-list.html'" class="px-6 py-2 border border-border-color rounded-md hover:border-primary hover:text-primary transition duration-300">
+                                返回用户列表
+                            </button>
+                            <button type="button" onclick="window.location.href='user-detail.html'" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300">
+                                查看用户详情
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 步骤切换逻辑
+        document.getElementById('nextStep1').addEventListener('click', function() {
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            
+            // 更新步骤条状态
+            document.querySelectorAll('.step')[0].classList.remove('active');
+            document.querySelectorAll('.step')[0].classList.add('completed');
+            document.querySelectorAll('.step')[1].classList.add('active');
+        });
+        
+        document.getElementById('prevStep2').addEventListener('click', function() {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step1').classList.remove('hidden');
+            
+            // 更新步骤条状态
+            document.querySelectorAll('.step')[0].classList.add('active');
+            document.querySelectorAll('.step')[0].classList.remove('completed');
+            document.querySelectorAll('.step')[1].classList.remove('active');
+        });
+        
+        document.getElementById('nextStep2').addEventListener('click', function() {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
+            
+            // 更新步骤条状态
+            document.querySelectorAll('.step')[1].classList.remove('active');
+            document.querySelectorAll('.step')[1].classList.add('completed');
+            document.querySelectorAll('.step')[2].classList.add('active');
+        });
+        
+        document.getElementById('prevStep3').addEventListener('click', function() {
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            
+            // 更新步骤条状态
+            document.querySelectorAll('.step')[1].classList.add('active');
+            document.querySelectorAll('.step')[1].classList.remove('completed');
+            document.querySelectorAll('.step')[2].classList.remove('active');
+        });
+        
+        document.getElementById('nextStep3').addEventListener('click', function() {
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step4').classList.remove('hidden');
+            
+            // 更新步骤条状态
+            document.querySelectorAll('.step')[2].classList.remove('active');
+            document.querySelectorAll('.step')[2].classList.add('completed');
+            document.querySelectorAll('.step')[3].classList.add('active');
+            document.querySelectorAll('.step')[3].classList.add('completed');
+        });
+    </script>
+</body>
+</html>

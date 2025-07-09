@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医疗CRM管理后台系统 - 高保真原型</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1890FF',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        error: '#F5222D',
+                        'text-primary': '#262626',
+                        'text-secondary': '#595959',
+                        'text-tertiary': '#8C8C8C',
+                        'border-color': '#D9D9D9',
+                        'bg-light': '#F5F5F5',
+                        'bg-lighter': '#FAFAFA',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            background-color: #F5F5F5;
+        }
+        .prototype-frame {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #D9D9D9;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+            background-color: white;
+        }
+        .prototype-card {
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .prototype-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #F0F0F0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .prototype-content {
+            padding: 0;
+        }
+        .prototype-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #F0F0F0;
+            background-color: #FAFAFA;
+            color: #8C8C8C;
+            font-size: 14px;
+        }
+        .browser-chrome {
+            border: 1px solid #D9D9D9;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+        }
+        .browser-header {
+            background-color: #F5F5F5;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #E8E8E8;
+        }
+        .browser-controls {
+            display: flex;
+            margin-right: 16px;
+        }
+        .browser-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .browser-dot-red {
+            background-color: #FF5F56;
+        }
+        .browser-dot-yellow {
+            background-color: #FFBD2E;
+        }
+        .browser-dot-green {
+            background-color: #27C93F;
+        }
+        .browser-address-bar {
+            flex: 1;
+            background-color: white;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 14px;
+            color: #595959;
+            display: flex;
+            align-items: center;
+        }
+        .browser-address-bar i {
+            color: #8C8C8C;
+            margin-right: 8px;
+        }
+        .browser-tabs {
+            display: flex;
+            background-color: #E8E8E8;
+            padding: 8px 16px 0;
+        }
+        .browser-tab {
+            background-color: #F5F5F5;
+            padding: 8px 16px;
+            border-radius: 8px 8px 0 0;
+            font-size: 12px;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            max-width: 200px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .browser-tab.active {
+            background-color: white;
+        }
+        .browser-tab i {
+            margin-right: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto py-8 px-4">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-text-primary mb-2">医疗CRM管理后台系统 - 高保真原型</h1>
+            <p class="text-text-secondary">基于Web浏览器界面风格，符合Chrome浏览器视觉规范的高保真交互原型</p>
+        </header>
+
+        <div class="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <h2 class="text-xl font-bold text-primary mb-2">原型说明</h2>
+            <p class="text-text-secondary mb-2">本原型基于产品需求文档(PRD)和用户故事地图开发，使用HTML、Tailwind CSS和FontAwesome实现。</p>
+            <p class="text-text-secondary mb-2">技术栈：HTML5、Tailwind CSS、FontAwesome、Chart.js</p>
+            <p class="text-text-secondary">图片来源：所有图片均来自Unsplash，为免费可商用的高质量图片</p>
+        </div>
+
+        <!-- 登录页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">登录页面</h2>
+                <a href="login.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/login</span>
+                        </div>
+                    </div>
+                    <iframe src="login.html" class="prototype-frame" title="登录页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                用户通过此页面登录系统，支持账号密码登录和记住账号功能
+            </div>
+        </div>
+
+        <!-- 工作台页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">工作台页面</h2>
+                <a href="dashboard.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-tabs">
+                        <div class="browser-tab active">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>工作台 - 医疗CRM系统</span>
+                        </div>
+                        <div class="browser-tab">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                    </div>
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/dashboard</span>
+                        </div>
+                    </div>
+                    <iframe src="dashboard.html" class="prototype-frame" title="工作台页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                系统主工作台，展示关键业务数据和快捷入口，提供整体业务概览
+            </div>
+        </div>
+
+        <!-- 用户列表页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">用户列表页面</h2>
+                <a href="user-list.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-tabs">
+                        <div class="browser-tab active">
+                            <i class="fas fa-users"></i>
+                            <span>用户列表 - 医疗CRM系统</span>
+                        </div>
+                        <div class="browser-tab">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>工作台</span>
+                        </div>
+                    </div>
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/users</span>
+                        </div>
+                    </div>
+                    <iframe src="user-list.html" class="prototype-frame" title="用户列表页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                用户管理列表页面，支持搜索、筛选、排序和批量操作功能
+            </div>
+        </div>
+
+        <!-- 用户详情页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">用户详情页面</h2>
+                <a href="user-detail.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-tabs">
+                        <div class="browser-tab active">
+                            <i class="fas fa-user"></i>
+                            <span>用户详情 - 医疗CRM系统</span>
+                        </div>
+                        <div class="browser-tab">
+                            <i class="fas fa-users"></i>
+                            <span>用户列表</span>
+                        </div>
+                    </div>
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/users/10001</span>
+                        </div>
+                    </div>
+                    <iframe src="user-detail.html" class="prototype-frame" title="用户详情页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                用户详细信息页面，展示用户基本信息、关联就诊人、订单历史等
+            </div>
+        </div>
+
+        <!-- 创建用户页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">创建用户页面</h2>
+                <a href="user-create.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-tabs">
+                        <div class="browser-tab active">
+                            <i class="fas fa-user-plus"></i>
+                            <span>创建用户 - 医疗CRM系统</span>
+                        </div>
+                        <div class="browser-tab">
+                            <i class="fas fa-users"></i>
+                            <span>用户列表</span>
+                        </div>
+                    </div>
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/users/create</span>
+                        </div>
+                    </div>
+                    <iframe src="user-create.html" class="prototype-frame" title="创建用户页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                创建新用户的表单页面，采用分步表单设计，提高信息填写的清晰度
+            </div>
+        </div>
+
+        <!-- 就诊人列表页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">就诊人列表页面</h2>
+                <a href="patient-list.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-tabs">
+                        <div class="browser-tab active">
+                            <i class="fas fa-user-injured"></i>
+                            <span>就诊人列表 - 医疗CRM系统</span>
+                        </div>
+                        <div class="browser-tab">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>工作台</span>
+                        </div>
+                    </div>
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/patients</span>
+                        </div>
+                    </div>
+                    <iframe src="patient-list.html" class="prototype-frame" title="就诊人列表页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                就诊人管理列表页面，支持搜索、筛选、排序和批量操作功能
+            </div>
+        </div>
+
+        <!-- 就诊人详情页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">就诊人详情页面</h2>
+                <a href="patient-detail.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-tabs">
+                        <div class="browser-tab active">
+                            <i class="fas fa-user-injured"></i>
+                            <span>就诊人详情 - 医疗CRM系统</span>
+                        </div>
+                        <div class="browser-tab">
+                            <i class="fas fa-user-injured"></i>
+                            <span>就诊人列表</span>
+                        </div>
+                    </div>
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/patients/20001</span>
+                        </div>
+                    </div>
+                    <iframe src="patient-detail.html" class="prototype-frame" title="就诊人详情页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                就诊人详细信息页面，展示就诊人基本信息、就诊记录、健康档案等
+            </div>
+        </div>
+
+        <!-- 订单列表页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">订单列表页面</h2>
+                <a href="order-list.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-tabs">
+                        <div class="browser-tab active">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>订单列表 - 医疗CRM系统</span>
+                        </div>
+                        <div class="browser-tab">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>工作台</span>
+                        </div>
+                    </div>
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/orders</span>
+                        </div>
+                    </div>
+                    <iframe src="order-list.html" class="prototype-frame" title="订单列表页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                订单管理列表页面，支持搜索、筛选、排序和批量操作功能
+            </div>
+        </div>
+
+        <!-- 订单详情页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">订单详情页面</h2>
+                <a href="order-detail.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-tabs">
+                        <div class="browser-tab active">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>订单详情 - 医疗CRM系统</span>
+                        </div>
+                        <div class="browser-tab">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>订单列表</span>
+                        </div>
+                    </div>
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/orders/30001</span>
+                        </div>
+                    </div>
+                    <iframe src="order-detail.html" class="prototype-frame" title="订单详情页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                订单详细信息页面，展示订单基本信息、服务项目、支付记录、操作日志等
+            </div>
+        </div>
+
+        <!-- 数据分析页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">数据分析页面</h2>
+                <a href="analytics-overview.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-tabs">
+                        <div class="browser-tab active">
+                            <i class="fas fa-chart-line"></i>
+                            <span>数据分析 - 医疗CRM系统</span>
+                        </div>
+                        <div class="browser-tab">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>工作台</span>
+                        </div>
+                    </div>
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/analytics</span>
+                        </div>
+                    </div>
+                    <iframe src="analytics-overview.html" class="prototype-frame" title="数据分析页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                数据分析概览页面，展示关键业务指标、趋势图表和自定义报表功能
+            </div>
+        </div>
+
+        <!-- 权限设置页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">权限设置页面</h2>
+                <a href="settings-permissions.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-tabs">
+                        <div class="browser-tab active">
+                            <i class="fas fa-user-shield"></i>
+                            <span>权限设置 - 医疗CRM系统</span>
+                        </div>
+                        <div class="browser-tab">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>工作台</span>
+                        </div>
+                    </div>
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/settings/permissions</span>
+                        </div>
+                    </div>
+                    <iframe src="settings-permissions.html" class="prototype-frame" title="权限设置页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                系统权限设置页面，管理角色和权限分配，控制用户访问权限
+            </div>
+        </div>
+
+        <!-- 系统参数设置页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">系统参数设置页面</h2>
+                <a href="settings-parameters.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-tabs">
+                        <div class="browser-tab active">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>系统参数 - 医疗CRM系统</span>
+                        </div>
+                        <div class="browser-tab">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>工作台</span>
+                        </div>
+                    </div>
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/settings/parameters</span>
+                        </div>
+                    </div>
+                    <iframe src="settings-parameters.html" class="prototype-frame" title="系统参数设置页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                系统参数配置页面，设置系统基本参数、高级参数和安全参数
+            </div>
+        </div>
+
+        <!-- 个人设置页面 -->
+        <div class="prototype-card">
+            <div class="prototype-header">
+                <h2 class="text-xl font-bold text-text-primary">个人设置页面</h2>
+                <a href="settings-personal.html" target="_blank" class="text-primary hover:underline">在新窗口打开 <i class="fas fa-external-link-alt ml-1"></i></a>
+            </div>
+            <div class="prototype-content">
+                <div class="browser-chrome">
+                    <div class="browser-tabs">
+                        <div class="browser-tab active">
+                            <i class="fas fa-user-cog"></i>
+                            <span>个人设置 - 医疗CRM系统</span>
+                        </div>
+                        <div class="browser-tab">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>工作台</span>
+                        </div>
+                    </div>
+                    <div class="browser-header">
+                        <div class="browser-controls">
+                            <div class="browser-dot browser-dot-red"></div>
+                            <div class="browser-dot browser-dot-yellow"></div>
+                            <div class="browser-dot browser-dot-green"></div>
+                        </div>
+                        <div class="browser-address-bar">
+                            <i class="fas fa-lock"></i>
+                            <span>https://medicrm.example.com/settings/personal</span>
+                        </div>
+                    </div>
+                    <iframe src="settings-personal.html" class="prototype-frame" title="个人设置页面"></iframe>
+                </div>
+            </div>
+            <div class="prototype-footer">
+                个人设置页面，用户可以修改个人资料、安全设置和通知偏好
+            </div>
+        </div>
+
+        <footer class="mt-12 text-center text-text-tertiary">
+            <p>医疗CRM管理后台系统 - 高保真原型 © 2023</p>
+            <p class="mt-2 text-sm">使用 HTML、Tailwind CSS 和 FontAwesome 构建</p>
+        </footer>
+    </div>
+
+    <script>
+        // 调整iframe高度以适应内容
+        window.addEventListener('load', function() {
+            const frames = document.querySelectorAll('.prototype-frame');
+            frames.forEach(frame => {
+                try {
+                    // 尝试调整高度，但不是所有iframe都允许这样做（跨域限制）
+                    frame.style.height = (frame.contentWindow.document.body.scrollHeight + 50) + 'px';
+                } catch (e) {
+                    console.log('无法调整iframe高度:', e);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

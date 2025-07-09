@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理 - 医疗CRM管理后台系统</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1890FF',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        error: '#F5222D',
+                        'text-primary': '#262626',
+                        'text-secondary': '#595959',
+                        'text-tertiary': '#8C8C8C',
+                        'border-color': '#D9D9D9',
+                        'bg-light': '#F5F5F5',
+                        'bg-lighter': '#FAFAFA',
+                        'menu-dark': '#001529',
+                        'menu-dark-active': '#1890FF',
+                    },
+                    boxShadow: {
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.09)',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            background-color: #F5F5F5;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #001529;
+            color: rgba(255, 255, 255, 0.65);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .sidebar-logo {
+            height: 64px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            background-color: #002140;
+        }
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+        .sidebar-menu-item {
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .sidebar-menu-item:hover {
+            color: white;
+        }
+        .sidebar-menu-item.active {
+            background-color: #1890FF;
+            color: white;
+        }
+        .sidebar-menu-item i {
+            margin-right: 10px;
+            width: 16px;
+            text-align: center;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 200px;
+            right: 0;
+            height: 64px;
+            background-color: white;
+            box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+        .content {
+            margin-left: 200px;
+            padding: 88px 24px 24px;
+            min-height: 100vh;
+        }
+        .table-container {
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+            overflow: hidden;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th {
+            background-color: #FAFAFA;
+            color: #262626;
+            font-weight: 500;
+            text-align: left;
+            padding: 16px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+        .table td {
+            padding: 16px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+        .table tr:hover {
+            background-color: #E6F7FF;
+        }
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 16px;
+        }
+        .pagination-item {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 4px;
+            border: 1px solid #D9D9D9;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .pagination-item:hover {
+            border-color: #1890FF;
+            color: #1890FF;
+        }
+        .pagination-item.active {
+            background-color: #1890FF;
+            border-color: #1890FF;
+            color: white;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background-color: #F5222D;
+            color: white;
+            font-size: 12px;
+            line-height: 16px;
+            text-align: center;
+            padding: 0 4px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 2px;
+            font-size: 12px;
+        }
+        .status-active {
+            background-color: #E6F7FF;
+            color: #1890FF;
+            border: 1px solid #91D5FF;
+        }
+        .status-inactive {
+            background-color: #FFF1F0;
+            color: #F5222D;
+            border: 1px solid #FFA39E;
+        }
+        .status-pending {
+            background-color: #FFF7E6;
+            color: #FAAD14;
+            border: 1px solid #FFD591;
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边导航 -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <i class="fas fa-hospital text-primary text-xl mr-2"></i>
+            <span class="text-white font-medium">医疗CRM系统</span>
+        </div>
+        <div class="sidebar-menu">
+            <div class="sidebar-menu-item" onclick="window.location.href='dashboard.html'">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>工作台</span>
+            </div>
+            <div class="sidebar-menu-item active">
+                <i class="fas fa-users"></i>
+                <span>用户管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='patient-list.html'">
+                <i class="fas fa-user-injured"></i>
+                <span>就诊人管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='order-list.html'">
+                <i class="fas fa-shopping-cart"></i>
+                <span>订单管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='analytics-overview.html'">
+                <i class="fas fa-chart-line"></i>
+                <span>数据分析</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='settings-permissions.html'">
+                <i class="fas fa-cog"></i>
+                <span>系统设置</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <div class="header">
+        <div class="flex-1 flex items-center">
+            <i class="fas fa-bars text-text-secondary text-lg cursor-pointer hover:text-primary"></i>
+            <div class="ml-6 flex">
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">首页</div>
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">帮助文档</div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-6">
+            <div class="relative cursor-pointer">
+                <i class="fas fa-bell text-text-secondary text-lg hover:text-primary"></i>
+                <span class="notification-badge">5</span>
+            </div>
+            <div class="flex items-center cursor-pointer">
+                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                     alt="用户头像" class="w-8 h-8 rounded-full mr-2" />
+                <span class="text-text-secondary">管理员</span>
+                <i class="fas fa-chevron-down text-text-tertiary ml-1 text-xs"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 内容区 -->
+    <div class="content">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-text-primary">用户管理</h1>
+                <p class="text-text-secondary mt-1">管理系统中的所有用户账户</p>
+            </div>
+            <button onclick="window.location.href='user-create.html'" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center transition duration-300">
+                <i class="fas fa-plus mr-2"></i> 创建用户
+            </button>
+        </div>
+
+        <!-- 搜索和筛选 -->
+        <div class="bg-white p-6 rounded-md shadow-card mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="search" class="block text-text-secondary text-sm mb-2">搜索</label>
+                    <div class="relative">
+                        <input type="text" id="search" placeholder="用户名/手机号/邮箱" 
+                               class="w-full pl-10 pr-3 py-2 border border-border-color rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-150 ease-in-out" />
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-text-tertiary">
+                            <i class="fas fa-search"></i>
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <label for="status" class="block text-text-secondary text-sm mb-2">状态</label>
+                    <select id="status" class="w-full px-3 py-2 border border-border-color rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-150 ease-in-out">
+                        <option value="">全部状态</option>
+                        <option value="active">已激活</option>
+                        <option value="inactive">已禁用</option>
+                        <option value="pending">待激活</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="date" class="block text-text-secondary text-sm mb-2">注册日期</label>
+                    <input type="date" id="date" class="w-full px-3 py-2 border border-border-color rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-150 ease-in-out" />
+                </div>
+            </div>
+            <div class="flex justify-end mt-4">
+                <button class="mr-2 px-4 py-2 border border-border-color rounded-md hover:border-primary hover:text-primary transition duration-300">
+                    重置
+                </button>
+                <button class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300">
+                    搜索
+                </button>
+            </div>
+        </div>
+
+        <!-- 用户列表 -->
+        <div class="table-container">
+            <div class="p-4 border-b border-border-color flex justify-between items-center">
+                <h2 class="text-lg font-bold text-text-primary">用户列表</h2>
+                <div class="flex space-x-2">
+                    <button class="px-3 py-1 text-sm border border-border-color rounded hover:text-primary hover:border-primary transition duration-300 flex items-center">
+                        <i class="fas fa-download mr-1"></i> 导出
+                    </button>
+                    <button class="px-3 py-1 text-sm border border-border-color rounded hover:text-primary hover:border-primary transition duration-300 flex items-center">
+                        <i class="fas fa-cog mr-1"></i> 列设置
+                    </button>
+                </div>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" class="mr-2 h-4 w-4 text-primary focus:ring-primary border-border-color rounded" />
+                        </th>
+                        <th>用户名</th>
+                        <th>手机号</th>
+                        <th>邮箱</th>
+                        <th>注册时间</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="mr-2 h-4 w-4 text-primary focus:ring-primary border-border-color rounded" />
+                        </td>
+                        <td>
+                            <div class="flex items-center">
+                                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-wearing-teal-dress-shirt-J1OScm_uHUQ -->
+                                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                     alt="用户头像" class="w-8 h-8 rounded-full mr-2" />
+                                <div>
+                                    <div class="text-text-primary">张小红</div>
+                                    <div class="text-text-tertiary text-xs">ID: 10001</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>13800138001</td>
+                        <td>zhangxiaohong@example.com</td>
+                        <td>2023-05-15 10:30:22</td>
+                        <td>
+                            <span class="status-badge status-active">已激活</span>
+                        </td>
+                        <td>
+                            <div class="flex space-x-2">
+                                <button onclick="window.location.href='user-detail.html'" class="text-primary hover:text-blue-600 transition duration-300">查看</button>
+                                <button class="text-warning hover:text-yellow-600 transition duration-300">禁用</button>
+                                <button class="text-error hover:text-red-600 transition duration-300">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="mr-2 h-4 w-4 text-primary focus:ring-primary border-border-color rounded" />
+                        </td>
+                        <td>
+                            <div class="flex items-center">
+                                <!-- 图片来源：Unsplash - https://unsplash.com/photos/man-in-brown-button-up-shirt-WMD64tMfc4k -->
+                                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                     alt="用户头像" class="w-8 h-8 rounded-full mr-2" />
+                                <div>
+                                    <div class="text-text-primary">李大壮</div>
+                                    <div class="text-text-tertiary text-xs">ID: 10002</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>13900139001</td>
+                        <td>lidazhuang@example.com</td>
+                        <td>2023-05-20 14:25:36</td>
+                        <td>
+                            <span class="status-badge status-inactive">已禁用</span>
+                        </td>
+                        <td>
+                            <div class="flex space-x-2">
+                                <button class="text-primary hover:text-blue-600 transition duration-300">查看</button>
+                                <button class="text-success hover:text-green-600 transition duration-300">激活</button>
+                                <button class="text-error hover:text-red-600 transition duration-300">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="mr-2 h-4 w-4 text-primary focus:ring-primary border-border-color rounded" />
+                        </td>
+                        <td>
+                            <div class="flex items-center">
+                                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                                <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                     alt="用户头像" class="w-8 h-8 rounded-full mr-2" />
+                                <div>
+                                    <div class="text-text-primary">王小丽</div>
+                                    <div class="text-text-tertiary text-xs">ID: 10003</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>13700137001</td>
+                        <td>wangxiaoli@example.com</td>
+                        <td>2023-06-01 09:15:48</td>
+                        <td>
+                            <span class="status-badge status-pending">待激活</span>
+                        </td>
+                        <td>
+                            <div class="flex space-x-2">
+                                <button class="text-primary hover:text-blue-600 transition duration-300">查看</button>
+                                <button class="text-success hover:text-green-600 transition duration-300">激活</button>
+                                <button class="text-error hover:text-red-600 transition duration-300">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="mr-2 h-4 w-4 text-primary focus:ring-primary border-border-color rounded" />
+                        </td>
+                        <td>
+                            <div class="flex items-center">
+                                <!-- 图片来源：Unsplash - https://unsplash.com/photos/man-in-black-crew-neck-shirt-ILip77SbmOE -->
+                                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                     alt="用户头像" class="w-8 h-8 rounded-full mr-2" />
+                                <div>
+                                    <div class="text-text-primary">赵明</div>
+                                    <div class="text-text-tertiary text-xs">ID: 10004</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>13600136001</td>
+                        <td>zhaoming@example.com</td>
+                        <td>2023-06-05 16:42:10</td>
+                        <td>
+                            <span class="status-badge status-active">已激活</span>
+                        </td>
+                        <td>
+                            <div class="flex space-x-2">
+                                <button class="text-primary hover:text-blue-600 transition duration-300">查看</button>
+                                <button class="text-warning hover:text-yellow-600 transition duration-300">禁用</button>
+                                <button class="text-error hover:text-red-600 transition duration-300">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="mr-2 h-4 w-4 text-primary focus:ring-primary border-border-color rounded" />
+                        </td>
+                        <td>
+                            <div class="flex items-center">
+                                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-black-scoop-neck-shirt-IF9TK5Uy-KI -->
+                                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                     alt="用户头像" class="w-8 h-8 rounded-full mr-2" />
+                                <div>
+                                    <div class="text-text-primary">钱芳</div>
+                                    <div class="text-text-tertiary text-xs">ID: 10005</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>13500135001</td>
+                        <td>qianfang@example.com</td>
+                        <td>2023-06-10 11:20:33</td>
+                        <td>
+                            <span class="status-badge status-active">已激活</span>
+                        </td>
+                        <td>
+                            <div class="flex space-x-2">
+                                <button class="text-primary hover:text-blue-600 transition duration-300">查看</button>
+                                <button class="text-warning hover:text-yellow-600 transition duration-300">禁用</button>
+                                <button class="text-error hover:text-red-600 transition duration-300">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- 分页 -->
+            <div class="pagination">
+                <div class="mr-4 text-text-secondary">
+                    共 <span class="text-text-primary">100</span> 条记录
+                </div>
+                <div class="pagination-item">
+                    <i class="fas fa-angle-left"></i>
+                </div>
+                <div class="pagination-item active">1</div>
+                <div class="pagination-item">2</div>
+                <div class="pagination-item">3</div>
+                <div class="pagination-item">4</div>
+                <div class="pagination-item">5</div>
+                <div class="pagination-item">
+                    <i class="fas fa-angle-right"></i>
+                </div>
+                <div class="ml-4 flex items-center">
+                    <span class="mr-2 text-text-secondary">跳至</span>
+                    <input type="text" class="w-12 px-2 py-1 border border-border-color rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition duration-150 ease-in-out" />
+                    <span class="ml-2 text-text-secondary">页</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

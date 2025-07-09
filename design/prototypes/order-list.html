@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单管理 - 医疗CRM管理后台系统</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1890FF',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        error: '#F5222D',
+                        'text-primary': '#262626',
+                        'text-secondary': '#595959',
+                        'text-tertiary': '#8C8C8C',
+                        'border-color': '#D9D9D9',
+                        'bg-light': '#F5F5F5',
+                        'bg-lighter': '#FAFAFA',
+                        'menu-dark': '#001529',
+                        'menu-dark-active': '#1890FF',
+                    },
+                    boxShadow: {
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.09)',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            background-color: #F5F5F5;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #001529;
+            color: rgba(255, 255, 255, 0.65);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .sidebar-logo {
+            height: 64px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            background-color: #002140;
+        }
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+        .sidebar-menu-item {
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .sidebar-menu-item:hover {
+            color: white;
+        }
+        .sidebar-menu-item.active {
+            background-color: #1890FF;
+            color: white;
+        }
+        .sidebar-menu-item i {
+            margin-right: 10px;
+            width: 16px;
+            text-align: center;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 200px;
+            right: 0;
+            height: 64px;
+            background-color: white;
+            box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+        .content {
+            margin-left: 200px;
+            padding: 88px 24px 24px;
+            min-height: 100vh;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background-color: #F5222D;
+            color: white;
+            font-size: 12px;
+            line-height: 16px;
+            text-align: center;
+            padding: 0 4px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .table th {
+            background-color: #FAFAFA;
+            color: #262626;
+            font-weight: 500;
+            text-align: left;
+            padding: 16px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+        .table td {
+            padding: 16px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+        .table tr:hover td {
+            background-color: #FAFAFA;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 8px;
+            height: 24px;
+            border-radius: 2px;
+            font-size: 12px;
+            line-height: 22px;
+        }
+        .tag-green {
+            background-color: #F6FFED;
+            border: 1px solid #B7EB8F;
+            color: #52C41A;
+        }
+        .tag-blue {
+            background-color: #E6F7FF;
+            border: 1px solid #91D5FF;
+            color: #1890FF;
+        }
+        .tag-orange {
+            background-color: #FFF7E6;
+            border: 1px solid #FFD591;
+            color: #FA8C16;
+        }
+        .tag-red {
+            background-color: #FFF1F0;
+            border: 1px solid #FFA39E;
+            color: #F5222D;
+        }
+        .tag-purple {
+            background-color: #F9F0FF;
+            border: 1px solid #D3ADF7;
+            color: #722ED1;
+        }
+        .tag-gray {
+            background-color: #F5F5F5;
+            border: 1px solid #D9D9D9;
+            color: #8C8C8C;
+        }
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+        .pagination-item {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            margin-right: 8px;
+            padding: 0 8px;
+            border: 1px solid #D9D9D9;
+            border-radius: 2px;
+            background-color: white;
+            color: #595959;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .pagination-item:hover {
+            border-color: #1890FF;
+            color: #1890FF;
+        }
+        .pagination-item.active {
+            border-color: #1890FF;
+            background-color: #1890FF;
+            color: white;
+        }
+        .pagination-item.disabled {
+            color: #D9D9D9;
+            cursor: not-allowed;
+        }
+        .pagination-item.disabled:hover {
+            border-color: #D9D9D9;
+            color: #D9D9D9;
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边导航 -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <i class="fas fa-hospital text-primary text-xl mr-2"></i>
+            <span class="text-white font-medium">医疗CRM系统</span>
+        </div>
+        <div class="sidebar-menu">
+            <div class="sidebar-menu-item" onclick="window.location.href='dashboard.html'">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>工作台</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='user-list.html'">
+                <i class="fas fa-users"></i>
+                <span>用户管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='patient-list.html'">
+                <i class="fas fa-user-injured"></i>
+                <span>就诊人管理</span>
+            </div>
+            <div class="sidebar-menu-item active">
+                <i class="fas fa-shopping-cart"></i>
+                <span>订单管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='analytics-overview.html'">
+                <i class="fas fa-chart-line"></i>
+                <span>数据分析</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='settings-permissions.html'">
+                <i class="fas fa-cog"></i>
+                <span>系统设置</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <div class="header">
+        <div class="flex-1 flex items-center">
+            <i class="fas fa-bars text-text-secondary text-lg cursor-pointer hover:text-primary"></i>
+            <div class="ml-6 flex">
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">首页</div>
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">帮助文档</div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-6">
+            <div class="relative cursor-pointer">
+                <i class="fas fa-bell text-text-secondary text-lg hover:text-primary"></i>
+                <span class="notification-badge">5</span>
+            </div>
+            <div class="flex items-center cursor-pointer">
+                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                     alt="用户头像" class="w-8 h-8 rounded-full mr-2" />
+                <span class="text-text-secondary">管理员</span>
+                <i class="fas fa-chevron-down text-text-tertiary ml-1 text-xs"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 内容区 -->
+    <div class="content">
+        <!-- 面包屑导航 -->
+        <div class="flex items-center text-text-secondary mb-6">
+            <a href="dashboard.html" class="hover:text-primary">首页</a>
+            <i class="fas fa-angle-right mx-2 text-xs"></i>
+            <span class="text-text-primary">订单管理</span>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-text-primary">订单管理</h1>
+            <div class="flex space-x-4">
+                <button onclick="window.location.href='order-create.html'" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300 flex items-center">
+                    <i class="fas fa-plus mr-2"></i> 创建订单
+                </button>
+                <button class="px-4 py-2 border border-border-color rounded-md hover:border-primary hover:text-primary transition duration-300 flex items-center">
+                    <i class="fas fa-download mr-2"></i> 导出数据
+                </button>
+            </div>
+        </div>
+
+        <!-- 搜索和筛选 -->
+        <div class="bg-white rounded-md shadow-card p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-text-secondary text-sm mb-2">订单编号</label>
+                    <input type="text" placeholder="请输入订单编号" class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" />
+                </div>
+                <div>
+                    <label class="block text-text-secondary text-sm mb-2">就诊人姓名</label>
+                    <input type="text" placeholder="请输入就诊人姓名" class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" />
+                </div>
+                <div>
+                    <label class="block text-text-secondary text-sm mb-2">手机号码</label>
+                    <input type="text" placeholder="请输入手机号码" class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" />
+                </div>
+                <div>
+                    <label class="block text-text-secondary text-sm mb-2">订单状态</label>
+                    <select class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300">
+                        <option value="">全部状态</option>
+                        <option value="pending">待支付</option>
+                        <option value="paid">已支付</option>
+                        <option value="completed">已完成</option>
+                        <option value="cancelled">已取消</option>
+                        <option value="refunded">已退款</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-text-secondary text-sm mb-2">服务项目</label>
+                    <select class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300">
+                        <option value="">全部项目</option>
+                        <option value="consultation">门诊咨询</option>
+                        <option value="examination">体检套餐</option>
+                        <option value="treatment">专科治疗</option>
+                        <option value="surgery">手术服务</option>
+                        <option value="other">其他服务</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-text-secondary text-sm mb-2">支付方式</label>
+                    <select class="w-full px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300">
+                        <option value="">全部方式</option>
+                        <option value="wechat">微信支付</option>
+                        <option value="alipay">支付宝</option>
+                        <option value="card">银行卡</option>
+                        <option value="cash">现金</option>
+                        <option value="insurance">医保</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-text-secondary text-sm mb-2">下单时间</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="date" class="flex-1 px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" />
+                        <span class="text-text-tertiary">至</span>
+                        <input type="date" class="flex-1 px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-text-secondary text-sm mb-2">金额范围</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" placeholder="最低金额" class="flex-1 px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" />
+                        <span class="text-text-tertiary">至</span>
+                        <input type="number" placeholder="最高金额" class="flex-1 px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300" />
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end mt-4 space-x-4">
+                <button class="px-4 py-2 border border-border-color rounded-md hover:border-primary hover:text-primary transition duration-300">
+                    重置
+                </button>
+                <button class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition duration-300">
+                    搜索
+                </button>
+            </div>
+        </div>
+
+        <!-- 订单列表 -->
+        <div class="bg-white rounded-md shadow-card p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <div class="text-text-secondary">
+                    共 <span class="text-primary font-medium">256</span> 条记录
+                </div>
+                <div class="flex space-x-4">
+                    <button class="px-4 py-2 border border-border-color rounded-md hover:border-primary hover:text-primary transition duration-300 flex items-center">
+                        <i class="fas fa-filter mr-2"></i> 筛选
+                    </button>
+                    <button class="px-4 py-2 border border-border-color rounded-md hover:border-primary hover:text-primary transition duration-300 flex items-center">
+                        <i class="fas fa-sort mr-2"></i> 排序
+                    </button>
+                    <select class="px-4 py-2 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300">
+                        <option value="10">10条/页</option>
+                        <option value="20">20条/页</option>
+                        <option value="50">50条/页</option>
+                        <option value="100">100条/页</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" class="mr-2" />
+                                订单编号
+                            </th>
+                            <th>就诊人信息</th>
+                            <th>服务项目</th>
+                            <th>订单金额</th>
+                            <th>支付方式</th>
+                            <th>下单时间</th>
+                            <th>订单状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="mr-2" />
+                                <a href="order-detail.html" class="text-primary hover:underline">ORD20230615001</a>
+                            </td>
+                            <td>
+                                <div class="flex items-center">
+                                    <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                                    <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                         alt="就诊人头像" class="w-8 h-8 rounded-full mr-2" />
+                                    <div>
+                                        <div class="font-medium">张小红</div>
+                                        <div class="text-text-tertiary text-xs">13800138001</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>内科门诊</td>
+                            <td class="font-medium">¥350.00</td>
+                            <td>微信支付</td>
+                            <td>2023-06-15 09:30</td>
+                            <td>
+                                <span class="tag tag-green">已完成</span>
+                            </td>
+                            <td>
+                                <div class="flex space-x-2">
+                                    <button class="text-primary hover:text-blue-600 transition duration-300" title="查看详情" onclick="window.location.href='order-detail.html'">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="text-primary hover:text-blue-600 transition duration-300" title="打印">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                    <button class="text-text-tertiary hover:text-primary transition duration-300" title="更多操作">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="mr-2" />
+                                <a href="order-detail.html" class="text-primary hover:underline">ORD20230614002</a>
+                            </td>
+                            <td>
+                                <div class="flex items-center">
+                                    <!-- 图片来源：Unsplash - https://unsplash.com/photos/man-in-blue-crew-neck-t-shirt-wearing-black-framed-eyeglasses-7YVZYZeITc8 -->
+                                    <img src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                         alt="就诊人头像" class="w-8 h-8 rounded-full mr-2" />
+                                    <div>
+                                        <div class="font-medium">李明</div>
+                                        <div class="text-text-tertiary text-xs">13900139001</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>体检套餐A</td>
+                            <td class="font-medium">¥1,200.00</td>
+                            <td>支付宝</td>
+                            <td>2023-06-14 14:15</td>
+                            <td>
+                                <span class="tag tag-blue">已支付</span>
+                            </td>
+                            <td>
+                                <div class="flex space-x-2">
+                                    <button class="text-primary hover:text-blue-600 transition duration-300" title="查看详情" onclick="window.location.href='order-detail.html'">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="text-primary hover:text-blue-600 transition duration-300" title="打印">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                    <button class="text-text-tertiary hover:text-primary transition duration-300" title="更多操作">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="mr-2" />
+                                <a href="order-detail.html" class="text-primary hover:underline">ORD20230613003</a>
+                            </td>
+                            <td>
+                                <div class="flex items-center">
+                                    <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-wearing-teal-and-white-floral-top-IF9TK5Uy-KI -->
+                                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                         alt="就诊人头像" class="w-8 h-8 rounded-full mr-2" />
+                                    <div>
+                                        <div class="font-medium">王芳</div>
+                                        <div class="text-text-tertiary text-xs">13600136001</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>妇科检查</td>
+                            <td class="font-medium">¥680.00</td>
+                            <td>银行卡</td>
+                            <td>2023-06-13 10:45</td>
+                            <td>
+                                <span class="tag tag-orange">待支付</span>
+                            </td>
+                            <td>
+                                <div class="flex space-x-2">
+                                    <button class="text-primary hover:text-blue-600 transition duration-300" title="查看详情" onclick="window.location.href='order-detail.html'">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="text-primary hover:text-blue-600 transition duration-300" title="打印">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                    <button class="text-text-tertiary hover:text-primary transition duration-300" title="更多操作">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="mr-2" />
+                                <a href="order-detail.html" class="text-primary hover:underline">ORD20230612004</a>
+                            </td>
+                            <td>
+                                <div class="flex items-center">
+                                    <!-- 图片来源：Unsplash - https://unsplash.com/photos/man-in-black-crew-neck-t-shirt-PQeoQdkU9jQ -->
+                                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                         alt="就诊人头像" class="w-8 h-8 rounded-full mr-2" />
+                                    <div>
+                                        <div class="font-medium">赵强</div>
+                                        <div class="text-text-tertiary text-xs">13700137001</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>牙科治疗</td>
+                            <td class="font-medium">¥1,500.00</td>
+                            <td>微信支付</td>
+                            <td>2023-06-12 16:20</td>
+                            <td>
+                                <span class="tag tag-red">已取消</span>
+                            </td>
+                            <td>
+                                <div class="flex space-x-2">
+                                    <button class="text-primary hover:text-blue-600 transition duration-300" title="查看详情" onclick="window.location.href='order-detail.html'">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="text-primary hover:text-blue-600 transition duration-300" title="打印">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                    <button class="text-text-tertiary hover:text-primary transition duration-300" title="更多操作">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="mr-2" />
+                                <a href="order-detail.html" class="text-primary hover:underline">ORD20230611005</a>
+                            </td>
+                            <td>
+                                <div class="flex items-center">
+                                    <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                                    <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                         alt="就诊人头像" class="w-8 h-8 rounded-full mr-2" />
+                                    <div>
+                                        <div class="font-medium">张小红</div>
+                                        <div class="text-text-tertiary text-xs">13800138001</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>皮肤科治疗</td>
+                            <td class="font-medium">¥450.00</td>
+                            <td>支付宝</td>
+                            <td>2023-06-11 11:30</td>
+                            <td>
+                                <span class="tag tag-purple">已退款</span>
+                            </td>
+                            <td>
+                                <div class="flex space-x-2">
+                                    <button class="text-primary hover:text-blue-600 transition duration-300" title="查看详情" onclick="window.location.href='order-detail.html'">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="text-primary hover:text-blue-600 transition duration-300" title="打印">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                    <button class="text-text-tertiary hover:text-primary transition duration-300" title="更多操作">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            <div class="pagination">
+                <div class="pagination-item disabled">
+                    <i class="fas fa-angle-double-left"></i>
+                </div>
+                <div class="pagination-item disabled">
+                    <i class="fas fa-angle-left"></i>
+                </div>
+                <div class="pagination-item active">1</div>
+                <div class="pagination-item">2</div>
+                <div class="pagination-item">3</div>
+                <div class="pagination-item">4</div>
+                <div class="pagination-item">5</div>
+                <div class="pagination-item">...</div>
+                <div class="pagination-item">10</div>
+                <div class="pagination-item">
+                    <i class="fas fa-angle-right"></i>
+                </div>
+                <div class="pagination-item">
+                    <i class="fas fa-angle-double-right"></i>
+                </div>
+                <div class="ml-4 text-text-secondary">
+                    跳至 <input type="text" class="w-12 px-2 py-1 border border-border-color rounded-md focus:outline-none focus:border-primary transition duration-300 text-center" value="1" /> 页
+                </div>
+            </div>
+        </div>
+
+        <!-- 批量操作 -->
+        <div class="bg-white rounded-md shadow-card p-6">
+            <h3 class="text-lg font-bold text-text-primary mb-4">批量操作</h3>
+            <div class="flex space-x-4">
+                <button class="px-4 py-2 border border-border-color rounded-md hover:border-primary hover:text-primary transition duration-300 flex items-center">
+                    <i class="fas fa-print mr-2"></i> 批量打印
+                </button>
+                <button class="px-4 py-2 border border-border-color rounded-md hover:border-primary hover:text-primary transition duration-300 flex items-center">
+                    <i class="fas fa-file-export mr-2"></i> 批量导出
+                </button>
+                <button class="px-4 py-2 border border-error text-error rounded-md hover:bg-error hover:text-white transition duration-300 flex items-center">
+                    <i class="fas fa-trash-alt mr-2"></i> 批量删除
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

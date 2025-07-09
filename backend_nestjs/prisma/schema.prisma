@@ -1,0 +1,184 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 用户表
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String   @unique
+  email     String?  @unique
+  idCard    String?  @map("id_card")
+  password  String
+  role     String     @default("USER")
+  status   String     @default("ACTIVE")
+  updatedBy Int?     @map("updated_by") // 更新者ID
+  deletedAt DateTime? @map("deleted_at") // 软删除字段
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  patients        Patient[]
+  orders          Order[]
+  createdOrders   Order[]   @relation("OrderCreatedBy")
+  updatedOrders   Order[]   @relation("OrderUpdatedBy")
+  updatedPatients Patient[] @relation("PatientUpdatedBy")
+  updatedUsers    User[]    @relation("UserUpdatedBy")
+  updater         User?     @relation("UserUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("users")
+}
+
+// 就诊人表
+model Patient {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @map("user_id")
+  name              String
+  gender            String   @default("UNKNOWN")
+  birthday          DateTime
+  phone             String?
+  idCard            String?  @map("id_card")
+  medicalInsurance  String?  @map("medical_insurance")
+  relationship      String? // 与用户的关系
+  emergencyContact  String?  @map("emergency_contact")
+  allergies         String? // 过敏史
+  medicalHistory    String?  @map("medical_history") // 病史
+  updatedBy         Int?     @map("updated_by") // 更新者ID
+  deletedAt         DateTime? @map("deleted_at") // 软删除字段
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updater        User?           @relation("PatientUpdatedBy", fields: [updatedBy], references: [id])
+  orders         Order[]
+  medicalRecords MedicalRecord[]
+
+  @@map("patients")
+}
+
+// 订单表
+model Order {
+  id          Int         @id @default(autoincrement())
+  orderNo     String      @unique @map("order_no")
+  userId      Int         @map("user_id")
+  patientId   Int         @map("patient_id")
+  totalAmount Float       @map("total_amount")
+  paidAmount  Float       @default(0) @map("paid_amount")
+  status      String      @default("PENDING")
+  orderType   String      @default("MEDICAL") @map("order_type")
+  description String?
+  createdById Int?        @map("created_by_id")
+  updatedBy   Int?        @map("updated_by") // 更新者ID
+  deletedAt   DateTime?   @map("deleted_at") // 软删除字段
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  // 关联关系
+  user      User        @relation(fields: [userId], references: [id])
+  patient   Patient     @relation(fields: [patientId], references: [id])
+  createdBy User?       @relation("OrderCreatedBy", fields: [createdById], references: [id])
+  updater   User?       @relation("OrderUpdatedBy", fields: [updatedBy], references: [id])
+  items     OrderItem[]
+  payments  Payment[]
+  refunds   Refund[]
+
+  @@map("orders")
+}
+
+// 订单项表
+model OrderItem {
+  id       Int     @id @default(autoincrement())
+  orderId  Int     @map("order_id")
+  itemName String  @map("item_name")
+  itemCode String? @map("item_code")
+  price    Float
+  quantity Int     @default(1)
+  amount   Float
+  category String? // 服务类别
+
+  // 关联关系
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+// 支付表
+model Payment {
+  id            Int           @id @default(autoincrement())
+  orderId       Int           @map("order_id")
+  paymentNo     String        @unique @map("payment_no")
+  amount        Float
+  paymentMethod String        @map("payment_method") @default("CASH")
+  paymentTime   DateTime?     @map("payment_time")
+  status        String        @default("PENDING")
+  transactionId String?       @map("transaction_id")
+  remark        String?
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  // 关联关系
+  order   Order    @relation(fields: [orderId], references: [id])
+  refunds Refund[]
+
+  @@map("payments")
+}
+
+// 退款表
+model Refund {
+  id        Int          @id @default(autoincrement())
+  orderId   Int          @map("order_id")
+  paymentId Int?         @map("payment_id")
+  refundNo  String       @unique @map("refund_no")
+  amount    Float
+  reason    String
+  status      String       @default("PENDING")
+  processedAt DateTime?  @map("processed_at")
+  remark    String?
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  // 关联关系
+  order   Order    @relation(fields: [orderId], references: [id])
+  payment Payment? @relation(fields: [paymentId], references: [id])
+
+  @@map("refunds")
+}
+
+// 病历表
+model MedicalRecord {
+  id         Int      @id @default(autoincrement())
+  patientId  Int      @map("patient_id")
+  visitDate  DateTime @map("visit_date")
+  department String
+  doctor     String
+  diagnosis  String
+  treatment  String?
+  notes      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@map("medical_records")
+}
+
+// 枚举定义
+// SQLite 不支持枚举，使用字符串常量
+// UserRole: ADMIN, DOCTOR, NURSE, USER
+// UserStatus: ACTIVE, INACTIVE, SUSPENDED
+// Gender: MALE, FEMALE, UNKNOWN
+// OrderStatus: PENDING, CONFIRMED, PROCESSING, PAID, COMPLETED, CANCELLED, REFUNDED
+// OrderType: MEDICAL, EXAMINATION, MEDICINE, OTHER
+// PaymentMethod: CASH, ALIPAY, WECHAT, CARD, INSURANCE
+// PaymentStatus: PENDING, SUCCESS, FAILED, CANCELLED
+// RefundStatus: PENDING, APPROVED, REJECTED, COMPLETED

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户详情 - 医疗CRM管理后台系统</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1890FF',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        error: '#F5222D',
+                        'text-primary': '#262626',
+                        'text-secondary': '#595959',
+                        'text-tertiary': '#8C8C8C',
+                        'border-color': '#D9D9D9',
+                        'bg-light': '#F5F5F5',
+                        'bg-lighter': '#FAFAFA',
+                        'menu-dark': '#001529',
+                        'menu-dark-active': '#1890FF',
+                    },
+                    boxShadow: {
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.09)',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            background-color: #F5F5F5;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #001529;
+            color: rgba(255, 255, 255, 0.65);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .sidebar-logo {
+            height: 64px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            background-color: #002140;
+        }
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+        .sidebar-menu-item {
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .sidebar-menu-item:hover {
+            color: white;
+        }
+        .sidebar-menu-item.active {
+            background-color: #1890FF;
+            color: white;
+        }
+        .sidebar-menu-item i {
+            margin-right: 10px;
+            width: 16px;
+            text-align: center;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 200px;
+            right: 0;
+            height: 64px;
+            background-color: white;
+            box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+        .content {
+            margin-left: 200px;
+            padding: 88px 24px 24px;
+            min-height: 100vh;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background-color: #F5222D;
+            color: white;
+            font-size: 12px;
+            line-height: 16px;
+            text-align: center;
+            padding: 0 4px;
+        }
+        .tab {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .tab:hover {
+            color: #1890FF;
+        }
+        .tab.active {
+            color: #1890FF;
+            border-bottom-color: #1890FF;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th {
+            background-color: #FAFAFA;
+            color: #262626;
+            font-weight: 500;
+            text-align: left;
+            padding: 16px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+        .table td {
+            padding: 16px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+        .table tr:hover {
+            background-color: #E6F7FF;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 2px;
+            font-size: 12px;
+        }
+        .status-active {
+            background-color: #E6F7FF;
+            color: #1890FF;
+            border: 1px solid #91D5FF;
+        }
+        .status-inactive {
+            background-color: #FFF1F0;
+            color: #F5222D;
+            border: 1px solid #FFA39E;
+        }
+        .status-pending {
+            background-color: #FFF7E6;
+            color: #FAAD14;
+            border: 1px solid #FFD591;
+        }
+        .status-completed {
+            background-color: #F6FFED;
+            color: #52C41A;
+            border: 1px solid #B7EB8F;
+        }
+        .status-processing {
+            background-color: #E6F7FF;
+            color: #1890FF;
+            border: 1px solid #91D5FF;
+        }
+        .status-cancelled {
+            background-color: #FFF1F0;
+            color: #F5222D;
+            border: 1px solid #FFA39E;
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边导航 -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <i class="fas fa-hospital text-primary text-xl mr-2"></i>
+            <span class="text-white font-medium">医疗CRM系统</span>
+        </div>
+        <div class="sidebar-menu">
+            <div class="sidebar-menu-item" onclick="window.location.href='dashboard.html'">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>工作台</span>
+            </div>
+            <div class="sidebar-menu-item active">
+                <i class="fas fa-users"></i>
+                <span>用户管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='patient-list.html'">
+                <i class="fas fa-user-injured"></i>
+                <span>就诊人管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='order-list.html'">
+                <i class="fas fa-shopping-cart"></i>
+                <span>订单管理</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='analytics-overview.html'">
+                <i class="fas fa-chart-line"></i>
+                <span>数据分析</span>
+            </div>
+            <div class="sidebar-menu-item" onclick="window.location.href='settings-permissions.html'">
+                <i class="fas fa-cog"></i>
+                <span>系统设置</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <div class="header">
+        <div class="flex-1 flex items-center">
+            <i class="fas fa-bars text-text-secondary text-lg cursor-pointer hover:text-primary"></i>
+            <div class="ml-6 flex">
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">首页</div>
+                <div class="px-4 py-2 cursor-pointer hover:text-primary">帮助文档</div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-6">
+            <div class="relative cursor-pointer">
+                <i class="fas fa-bell text-text-secondary text-lg hover:text-primary"></i>
+                <span class="notification-badge">5</span>
+            </div>
+            <div class="flex items-center cursor-pointer">
+                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-white-shirt-smiling-mEZ3PoFGs_k -->
+                <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                     alt="用户头像" class="w-8 h-8 rounded-full mr-2" />
+                <span class="text-text-secondary">管理员</span>
+                <i class="fas fa-chevron-down text-text-tertiary ml-1 text-xs"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 内容区 -->
+    <div class="content">
+        <!-- 面包屑导航 -->
+        <div class="flex items-center text-text-secondary mb-6">
+            <a href="dashboard.html" class="hover:text-primary">首页</a>
+            <i class="fas fa-angle-right mx-2 text-xs"></i>
+            <a href="user-list.html" class="hover:text-primary">用户管理</a>
+            <i class="fas fa-angle-right mx-2 text-xs"></i>
+            <span class="text-text-primary">用户详情</span>
+        </div>
+
+        <!-- 用户基本信息 -->
+        <div class="bg-white rounded-md shadow-card p-6 mb-6">
+            <div class="flex">
+                <div class="mr-6">
+                    <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-wearing-teal-dress-shirt-J1OScm_uHUQ -->
+                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                         alt="用户头像" class="w-24 h-24 rounded-full object-cover" />
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h1 class="text-2xl font-bold text-text-primary flex items-center">
+                                张小红
+                                <span class="status-badge status-active ml-2">已激活</span>
+                            </h1>
+                            <p class="text-text-secondary mt-1">ID: 10001</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button onclick="window.location.href='user-edit.html'" class="px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary hover:text-white transition duration-300">
+                                <i class="fas fa-edit mr-1"></i> 编辑
+                            </button>
+                            <button class="px-4 py-2 border border-warning text-warning rounded-md hover:bg-warning hover:text-white transition duration-300">
+                                <i class="fas fa-ban mr-1"></i> 禁用
+                            </button>
+                            <button class="px-4 py-2 border border-error text-error rounded-md hover:bg-error hover:text-white transition duration-300">
+                                <i class="fas fa-trash-alt mr-1"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                        <div>
+                            <p class="text-text-tertiary">手机号</p>
+                            <p class="text-text-primary mt-1">13800138001</p>
+                        </div>
+                        <div>
+                            <p class="text-text-tertiary">邮箱</p>
+                            <p class="text-text-primary mt-1">zhangxiaohong@example.com</p>
+                        </div>
+                        <div>
+                            <p class="text-text-tertiary">注册时间</p>
+                            <p class="text-text-primary mt-1">2023-05-15 10:30:22</p>
+                        </div>
+                        <div>
+                            <p class="text-text-tertiary">最后登录</p>
+                            <p class="text-text-primary mt-1">2023-07-20 15:45:36</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 标签页导航 -->
+        <div class="bg-white rounded-md shadow-card mb-6">
+            <div class="flex border-b border-border-color">
+                <div class="tab active">基本资料</div>
+                <div class="tab">就诊人</div>
+                <div class="tab">订单记录</div>
+                <div class="tab">操作日志</div>
+            </div>
+
+            <!-- 基本资料内容 -->
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-text-primary mb-4">个人信息</h3>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="flex">
+                                <div class="w-24 text-text-tertiary">真实姓名</div>
+                                <div class="text-text-primary">张小红</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-24 text-text-tertiary">性别</div>
+                                <div class="text-text-primary">女</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-24 text-text-tertiary">出生日期</div>
+                                <div class="text-text-primary">1990-05-15</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-24 text-text-tertiary">身份证号</div>
+                                <div class="text-text-primary">310************123</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-24 text-text-tertiary">地址</div>
+                                <div class="text-text-primary">上海市浦东新区张江高科技园区博云路123号</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-text-primary mb-4">账户信息</h3>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="flex">
+                                <div class="w-24 text-text-tertiary">账户余额</div>
+                                <div class="text-text-primary">¥ 1,280.50</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-24 text-text-tertiary">积分</div>
+                                <div class="text-text-primary">3,250</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-24 text-text-tertiary">会员等级</div>
+                                <div class="text-text-primary">黄金会员</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-24 text-text-tertiary">注册来源</div>
+                                <div class="text-text-primary">微信小程序</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-24 text-text-tertiary">账户状态</div>
+                                <div class="text-text-primary">
+                                    <span class="status-badge status-active">已激活</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-lg font-bold text-text-primary mb-4">健康信息</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-bg-lighter p-4 rounded-md">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-heartbeat text-error mr-2"></i>
+                                <span class="text-text-primary font-medium">过敏史</span>
+                            </div>
+                            <p class="text-text-secondary">青霉素、海鲜</p>
+                        </div>
+                        <div class="bg-bg-lighter p-4 rounded-md">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-pills text-warning mr-2"></i>
+                                <span class="text-text-primary font-medium">慢性病史</span>
+                            </div>
+                            <p class="text-text-secondary">高血压（2018年确诊）</p>
+                        </div>
+                        <div class="bg-bg-lighter p-4 rounded-md">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-procedures text-primary mr-2"></i>
+                                <span class="text-text-primary font-medium">手术史</span>
+                            </div>
+                            <p class="text-text-secondary">阑尾切除（2015年）</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 就诊人列表 -->
+        <div class="bg-white rounded-md shadow-card mb-6">
+            <div class="p-4 border-b border-border-color flex justify-between items-center">
+                <h2 class="text-lg font-bold text-text-primary">关联就诊人</h2>
+                <button class="px-3 py-1 text-sm bg-primary text-white rounded hover:bg-blue-600 transition duration-300 flex items-center">
+                    <i class="fas fa-plus mr-1"></i> 添加就诊人
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- 就诊人卡片 1 -->
+                    <div class="border border-border-color rounded-md p-4 hover:border-primary transition duration-300">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center">
+                                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-wearing-teal-dress-shirt-J1OScm_uHUQ -->
+                                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                     alt="就诊人头像" class="w-10 h-10 rounded-full mr-3" />
+                                <div>
+                                    <div class="text-text-primary font-medium">张小红</div>
+                                    <div class="text-text-tertiary text-xs">本人</div>
+                                </div>
+                            </div>
+                            <div class="flex space-x-1">
+                                <button class="text-primary hover:text-blue-600 transition duration-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-error hover:text-red-600 transition duration-300">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-4 grid grid-cols-1 gap-2">
+                            <div class="flex">
+                                <div class="w-20 text-text-tertiary">性别</div>
+                                <div class="text-text-primary">女</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-20 text-text-tertiary">年龄</div>
+                                <div class="text-text-primary">33岁</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-20 text-text-tertiary">手机号</div>
+                                <div class="text-text-primary">13800138001</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-20 text-text-tertiary">身份证号</div>
+                                <div class="text-text-primary">310************123</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 就诊人卡片 2 -->
+                    <div class="border border-border-color rounded-md p-4 hover:border-primary transition duration-300">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center">
+                                <!-- 图片来源：Unsplash - https://unsplash.com/photos/boy-in-white-crew-neck-t-shirt-wearing-black-framed-eyeglasses-tA90pRfL2gM -->
+                                <img src="https://images.unsplash.com/photo-1545696968-1a5245650b36?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                     alt="就诊人头像" class="w-10 h-10 rounded-full mr-3" />
+                                <div>
+                                    <div class="text-text-primary font-medium">张小明</div>
+                                    <div class="text-text-tertiary text-xs">儿子</div>
+                                </div>
+                            </div>
+                            <div class="flex space-x-1">
+                                <button class="text-primary hover:text-blue-600 transition duration-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-error hover:text-red-600 transition duration-300">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-4 grid grid-cols-1 gap-2">
+                            <div class="flex">
+                                <div class="w-20 text-text-tertiary">性别</div>
+                                <div class="text-text-primary">男</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-20 text-text-tertiary">年龄</div>
+                                <div class="text-text-primary">10岁</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-20 text-text-tertiary">手机号</div>
+                                <div class="text-text-primary">-</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-20 text-text-tertiary">身份证号</div>
+                                <div class="text-text-primary">310************456</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 就诊人卡片 3 -->
+                    <div class="border border-border-color rounded-md p-4 hover:border-primary transition duration-300">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center">
+                                <!-- 图片来源：Unsplash - https://unsplash.com/photos/woman-in-black-long-sleeve-shirt-wearing-eyeglasses-IF9TK5Uy-KI -->
+                                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1024&q=80" 
+                                     alt="就诊人头像" class="w-10 h-10 rounded-full mr-3" />
+                                <div>
+                                    <div class="text-text-primary font-medium">张妈妈</div>
+                                    <div class="text-text-tertiary text-xs">母亲</div>
+                                </div>
+                            </div>
+                            <div class="flex space-x-1">
+                                <button class="text-primary hover:text-blue-600 transition duration-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-error hover:text-red-600 transition duration-300">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-4 grid grid-cols-1 gap-2">
+                            <div class="flex">
+                                <div class="w-20 text-text-tertiary">性别</div>
+                                <div class="text-text-primary">女</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-20 text-text-tertiary">年龄</div>
+                                <div class="text-text-primary">65岁</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-20 text-text-tertiary">手机号</div>
+                                <div class="text-text-primary">13900139001</div>
+                            </div>
+                            <div class="flex">
+                                <div class="w-20 text-text-tertiary">身份证号</div>
+                                <div class="text-text-primary">310************789</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 订单记录 -->
+        <div class="bg-white rounded-md shadow-card mb-6">
+            <div class="p-4 border-b border-border-color flex justify-between items-center">
+                <h2 class="text-lg font-bold text-text-primary">最近订单</h2>
+                <a href="order-list.html?user_id=10001" class="text-primary hover:text-blue-600 transition duration-300">
+                    查看全部 <i class="fas fa-angle-right ml-1"></i>
+                </a>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>订单号</th>
+                        <th>服务项目</th>
+                        <th>就诊人</th>
+                        <th>订单金额</th>
+                        <th>创建时间</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ORD20230720001</td>
+                        <td>全身体检套餐A</td>
+                        <td>张小红</td>
+                        <td>¥ 1,280.00</td>
+                        <td>2023-07-20 09:15:30</td>
+                        <td>
+                            <span class="status-badge status-completed">已完成</span>
+                        </td>
+                        <td>
+                            <a href="order-detail.html?id=ORD20230720001" class="text-primary hover:text-blue-600 transition duration-300">查看</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>ORD20230705002</td>
+                        <td>儿童体检套餐</td>
+                        <td>张小明</td>
+                        <td>¥ 680.00</td>
+                        <td>2023-07-05 14:30:22</td>
+                        <td>
+                            <span class="status-badge status-completed">已完成</span>
+                        </td>
+                        <td>
+                            <a href="order-detail.html?id=ORD20230705002" class="text-primary hover:text-blue-600 transition duration-300">查看</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>ORD20230628003</td>
+                        <td>老年人体检套餐</td>
+                        <td>张妈妈</td>
+                        <td>¥ 980.00</td>
+                        <td>2023-06-28 10:45:18</td>
+                        <td>
+                            <span class="status-badge status-processing">进行中</span>
+                        </td>
+                        <td>
+                            <a href="order-detail.html?id=ORD20230628003" class="text-primary hover:text-blue-600 transition duration-300">查看</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 操作日志 -->
+        <div class="bg-white rounded-md shadow-card">
+            <div class="p-4 border-b border-border-color">
+                <h2 class="text-lg font-bold text-text-primary">操作日志</h2>
+            </div>
+            <div class="p-4">
+                <div class="relative">
+                    <!-- 时间线 -->
+                    <div class="absolute left-2 top-0 bottom-0 w-0.5 bg-border-color"></div>
+                    
+                    <!-- 日志项 -->
+                    <div class="ml-8 mb-6 relative">
+                        <div class="absolute left-[-25px] top-0 w-4 h-4 rounded-full bg-primary border-2 border-white"></div>
+                        <div class="text-text-tertiary mb-1">2023-07-20 15:45:36</div>
+                        <div class="text-text-primary">用户登录系统</div>
+                        <div class="text-text-secondary text-sm mt-1">IP: 192.168.1.100 | 设备: iPhone 13 | 浏览器: Safari</div>
+                    </div>
+                    
+                    <div class="ml-8 mb-6 relative">
+                        <div class="absolute left-[-25px] top-0 w-4 h-4 rounded-full bg-success border-2 border-white"></div>
+                        <div class="text-text-tertiary mb-1">2023-07-20 09:15:30</div>
+                        <div class="text-text-primary">创建订单 ORD20230720001</div>
+                        <div class="text-text-secondary text-sm mt-1">服务项目: 全身体检套餐A | 金额: ¥1,280.00</div>
+                    </div>
+                    
+                    <div class="ml-8 mb-6 relative">
+                        <div class="absolute left-[-25px] top-0 w-4 h-4 rounded-full bg-warning border-2 border-white"></div>
+                        <div class="text-text-tertiary mb-1">2023-07-15 16:30:45</div>
+                        <div class="text-text-primary">修改个人信息</div>
+                        <div class="text-text-secondary text-sm mt-1">更新了手机号码和地址信息</div>
+                    </div>
+                    
+                    <div class="ml-8 mb-6 relative">
+                        <div class="absolute left-[-25px] top-0 w-4 h-4 rounded-full bg-primary border-2 border-white"></div>
+                        <div class="text-text-tertiary mb-1">2023-07-10 10:20:15</div>
+                        <div class="text-text-primary">添加就诊人 张妈妈</div>
+                        <div class="text-text-secondary text-sm mt-1">关系: 母亲 | 年龄: 65岁</div>
+                    </div>
+                    
+                    <div class="ml-8 relative">
+                        <div class="absolute left-[-25px] top-0 w-4 h-4 rounded-full bg-primary border-2 border-white"></div>
+                        <div class="text-text-tertiary mb-1">2023-05-15 10:30:22</div>
+                        <div class="text-text-primary">用户注册</div>
+                        <div class="text-text-secondary text-sm mt-1">注册来源: 微信小程序</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 标签页切换效果
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                // 在实际应用中，这里会加载对应的内容
+            });
+        });
+    </script>
+</body>
+</html>

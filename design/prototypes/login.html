@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 医疗CRM管理后台系统</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1890FF',
+                        success: '#52C41A',
+                        warning: '#FAAD14',
+                        error: '#F5222D',
+                        'text-primary': '#262626',
+                        'text-secondary': '#595959',
+                        'text-tertiary': '#8C8C8C',
+                        'border-color': '#D9D9D9',
+                        'bg-light': '#F5F5F5',
+                        'bg-lighter': '#FAFAFA',
+                    },
+                    boxShadow: {
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.09)',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            background-color: #F5F5F5;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+        }
+        .login-form-button {
+            width: 100%;
+        }
+        .login-form-forgot {
+            float: right;
+        }
+        .login-form-remember {
+            float: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="text-center mb-8">
+            <div class="flex justify-center items-center mb-4">
+                <i class="fas fa-hospital text-primary text-4xl mr-3"></i>
+                <h1 class="text-2xl font-bold text-text-primary">医疗CRM管理后台</h1>
+            </div>
+            <p class="text-text-secondary">专业的医疗客户关系管理系统</p>
+        </div>
+        
+        <form class="login-form">
+            <div class="mb-4">
+                <div class="mb-2">
+                    <label for="username" class="block text-text-secondary text-sm">用户名</label>
+                </div>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-text-tertiary">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    <input type="text" id="username" name="username" placeholder="请输入用户名" 
+                           class="w-full pl-10 pr-3 py-2 border border-border-color rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
+                           value="admin" />
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <div class="mb-2 flex justify-between items-center">
+                    <label for="password" class="block text-text-secondary text-sm">密码</label>
+                    <a href="#" class="text-primary text-sm hover:text-blue-700 transition duration-150 ease-in-out">忘记密码?</a>
+                </div>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-text-tertiary">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    <input type="password" id="password" name="password" placeholder="请输入密码" 
+                           class="w-full pl-10 pr-3 py-2 border border-border-color rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
+                           value="password" />
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between mb-6">
+                <label class="flex items-center text-text-secondary text-sm">
+                    <input type="checkbox" class="mr-2 h-4 w-4 text-primary focus:ring-primary border-border-color rounded" checked />
+                    记住我
+                </label>
+            </div>
+            
+            <div class="mb-4">
+                <button type="button" onclick="window.location.href='dashboard.html'" 
+                        class="w-full bg-primary hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150 ease-in-out">
+                    登录
+                </button>
+            </div>
+            
+            <div class="text-center text-text-tertiary text-sm">
+                <span>其他登录方式</span>
+                <div class="flex justify-center mt-2 space-x-4">
+                    <a href="#" class="text-text-tertiary hover:text-primary transition duration-150 ease-in-out">
+                        <i class="fab fa-weixin text-xl"></i>
+                    </a>
+                    <a href="#" class="text-text-tertiary hover:text-primary transition duration-150 ease-in-out">
+                        <i class="fas fa-mobile-alt text-xl"></i>
+                    </a>
+                    <a href="#" class="text-text-tertiary hover:text-primary transition duration-150 ease-in-out">
+                        <i class="fas fa-qrcode text-xl"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- 背景图片来源：Unsplash - https://unsplash.com/photos/blue-and-white-abstract-painting-hR545CzxZxk -->
+    <div class="fixed inset-0 -z-10" style="background-image: url('https://images.unsplash.com/photo-1551076805-e1869033e561?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center; opacity: 0.05;"></div>
+</body>
+</html>
