@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Avatar, Dropdown, Badge, Button, Space } from 'antd';
 import {
   DashboardOutlined,
@@ -27,6 +27,7 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const [openKeys, setOpenKeys] = useState<string[]>([]);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -69,13 +70,28 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       children: [
         {
           key: '/settings/permissions',
-          label: '权限设置',
+          label: '权限管理',
           path: '/settings/permissions',
         },
         {
           key: '/settings/parameters',
           label: '系统参数',
           path: '/settings/parameters',
+        },
+        {
+          key: '/settings/dictionary',
+          label: '字典管理',
+          path: '/settings/dictionary',
+        },
+        {
+          key: '/settings/logs',
+          label: '操作日志',
+          path: '/settings/logs',
+        },
+        {
+          key: '/settings/notifications',
+          label: '消息通知',
+          path: '/settings/notifications',
         },
         {
           key: '/settings/personal',
@@ -111,12 +127,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     return [pathname];
   };
 
-  // 获取当前展开的菜单项
-  const getOpenKeys = () => {
+  // 初始化展开的菜单项
+  useEffect(() => {
     if (pathname.startsWith('/settings')) {
-      return ['/settings'];
+      setOpenKeys(['/settings']);
     }
-    return [];
+  }, [pathname]);
+
+  // 处理菜单展开/收起
+  const handleOpenChange = (keys: string[]) => {
+    setOpenKeys(keys);
   };
 
   // 用户下拉菜单
@@ -193,7 +213,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           theme="dark"
           mode="inline"
           selectedKeys={getSelectedKeys()}
-          openKeys={getOpenKeys()}
+          openKeys={openKeys}
+          onOpenChange={handleOpenChange}
           items={menuItems}
           onClick={handleMenuClick}
           style={{ borderRight: 0 }}

@@ -1,573 +1,42 @@
-# 医疗系统后端 API 规范文档
-
-## 概述
-
-本文档描述了医疗系统后端服务的 RESTful API 接口规范，基于 OpenAPI 3.0 标准。
+# API 接口定义文档
 
 ## 服务器信息
 
-- **开发环境**: `http://localhost:3000/api/v1`
-- **测试环境**: `https://api-test.medical-system.com/api/v1`
-- **生产环境**: `https://api.medical-system.com/api/v1`
+- **开发环境**: http://localhost:3000
+- **测试环境**: https://api-test.example.com
+- **生产环境**: https://api.example.com
 
 ## 认证方式
 
-本 API 使用 JWT (JSON Web Token) 进行身份认证。
+本API使用 **JWT (JSON Web Token)** 进行身份认证：
 
-### 获取访问令牌
-
-通过登录接口获取 JWT 令牌：
-
-```http
-POST /auth/login
-Content-Type: application/json
-
-{
-  "phone": "13800138000",
-  "password": "password123"
-}
-```
-
-### 使用访问令牌
-
-在需要认证的请求头中携带令牌：
-
-```http
-Authorization: Bearer <your-jwt-token>
-```
+- **认证头**: `Authorization: Bearer <token>`
+- **Token获取**: 通过登录接口获取
+- **Token刷新**: 通过刷新接口更新
+- **Token过期**: 默认24小时
 
 ## OpenAPI 3.0 规范
 
 ```yaml
 openapi: 3.0.3
 info:
-  title: 医疗系统后端 API
-  description: 医疗系统后端服务的 RESTful API 接口
+  title: 系统管理 API
+  description: 系统管理模块API接口文档，包括权限管理、系统参数、字典管理、操作日志、消息通知和数据备份等功能
   version: 1.0.0
   contact:
-    name: 医疗系统开发团队
-    email: dev@medical-system.com
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
+    name: API Support
+    email: support@example.com
 
 servers:
-  - url: http://localhost:3000/api/v1
+  - url: http://localhost:3000
     description: 开发环境
-  - url: https://api-test.medical-system.com/api/v1
+  - url: https://api-test.example.com
     description: 测试环境
-  - url: https://api.medical-system.com/api/v1
+  - url: https://api.example.com
     description: 生产环境
 
 security:
   - bearerAuth: []
-
-paths:
-  # 认证相关接口
-  /auth/login:
-    post:
-      tags:
-        - 认证管理
-      summary: 用户登录
-      description: 使用手机号和密码进行用户登录
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginDto'
-      responses:
-        '200':
-          description: 登录成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  access_token:
-                    type: string
-                    description: JWT 访问令牌
-                  user:
-                    $ref: '#/components/schemas/UserEntity'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /auth/register:
-    post:
-      tags:
-        - 认证管理
-      summary: 用户注册
-      description: 注册新用户账号
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegisterDto'
-      responses:
-        '201':
-          description: 注册成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  access_token:
-                    type: string
-                    description: JWT 访问令牌
-                  user:
-                    $ref: '#/components/schemas/UserEntity'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
-          $ref: '#/components/responses/Conflict'
-
-  /auth/profile:
-    get:
-      tags:
-        - 认证管理
-      summary: 获取当前用户信息
-      description: 获取当前登录用户的详细信息
-      responses:
-        '200':
-          description: 获取成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserEntity'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  # 用户管理接口
-  /users:
-    get:
-      tags:
-        - 用户管理
-      summary: 获取用户列表
-      description: 分页获取用户列表，支持搜索和筛选
-      parameters:
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Limit'
-        - name: keyword
-          in: query
-          description: 搜索关键词（姓名、手机号）
-          schema:
-            type: string
-        - name: role
-          in: query
-          description: 用户角色筛选
-          schema:
-            $ref: '#/components/schemas/UserRole'
-        - name: status
-          in: query
-          description: 用户状态筛选
-          schema:
-            $ref: '#/components/schemas/UserStatus'
-      responses:
-        '200':
-          description: 获取成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedUsers'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-    post:
-      tags:
-        - 用户管理
-      summary: 创建用户
-      description: 创建新用户（仅管理员）
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateUserDto'
-      responses:
-        '201':
-          description: 创建成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserEntity'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '409':
-          $ref: '#/components/responses/Conflict'
-
-  /users/{id}:
-    get:
-      tags:
-        - 用户管理
-      summary: 获取用户详情
-      description: 根据用户ID获取用户详细信息
-      parameters:
-        - $ref: '#/components/parameters/UserId'
-      responses:
-        '200':
-          description: 获取成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserEntity'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    patch:
-      tags:
-        - 用户管理
-      summary: 更新用户信息
-      description: 更新用户信息
-      parameters:
-        - $ref: '#/components/parameters/UserId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateUserDto'
-      responses:
-        '200':
-          description: 更新成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserEntity'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    delete:
-      tags:
-        - 用户管理
-      summary: 删除用户
-      description: 删除用户（仅管理员）
-      parameters:
-        - $ref: '#/components/parameters/UserId'
-      responses:
-        '200':
-          description: 删除成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /users/statistics:
-    get:
-      tags:
-        - 用户管理
-      summary: 获取用户统计信息
-      description: 获取用户数量统计信息
-      responses:
-        '200':
-          description: 获取成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserStatistics'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  # 就诊人管理接口
-  /patients:
-    get:
-      tags:
-        - 就诊人管理
-      summary: 获取就诊人列表
-      description: 分页获取就诊人列表
-      parameters:
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Limit'
-        - name: keyword
-          in: query
-          description: 搜索关键词（姓名、手机号）
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 获取成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedPatients'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-    post:
-      tags:
-        - 就诊人管理
-      summary: 创建就诊人
-      description: 为当前用户创建新的就诊人
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreatePatientDto'
-      responses:
-        '201':
-          description: 创建成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PatientEntity'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /patients/{id}:
-    get:
-      tags:
-        - 就诊人管理
-      summary: 获取就诊人详情
-      description: 根据就诊人ID获取详细信息
-      parameters:
-        - $ref: '#/components/parameters/PatientId'
-      responses:
-        '200':
-          description: 获取成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PatientEntity'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    patch:
-      tags:
-        - 就诊人管理
-      summary: 更新就诊人信息
-      description: 更新就诊人信息
-      parameters:
-        - $ref: '#/components/parameters/PatientId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdatePatientDto'
-      responses:
-        '200':
-          description: 更新成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PatientEntity'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    delete:
-      tags:
-        - 就诊人管理
-      summary: 删除就诊人
-      description: 删除就诊人
-      parameters:
-        - $ref: '#/components/parameters/PatientId'
-      responses:
-        '200':
-          description: 删除成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  # 订单管理接口
-  /orders:
-    get:
-      tags:
-        - 订单管理
-      summary: 获取订单列表
-      description: 分页获取订单列表，支持搜索和筛选
-      parameters:
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Limit'
-        - name: keyword
-          in: query
-          description: 搜索关键词（订单号、就诊人姓名）
-          schema:
-            type: string
-        - name: status
-          in: query
-          description: 订单状态筛选
-          schema:
-            $ref: '#/components/schemas/OrderStatus'
-        - name: orderType
-          in: query
-          description: 订单类型筛选
-          schema:
-            $ref: '#/components/schemas/OrderType'
-        - name: patientId
-          in: query
-          description: 就诊人ID筛选
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: 获取成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedOrders'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-    post:
-      tags:
-        - 订单管理
-      summary: 创建订单
-      description: 创建新订单
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateOrderDto'
-      responses:
-        '201':
-          description: 创建成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderEntity'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /orders/{id}:
-    get:
-      tags:
-        - 订单管理
-      summary: 获取订单详情
-      description: 根据订单ID获取详细信息
-      parameters:
-        - $ref: '#/components/parameters/OrderId'
-      responses:
-        '200':
-          description: 获取成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderEntity'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    patch:
-      tags:
-        - 订单管理
-      summary: 更新订单
-      description: 更新订单信息
-      parameters:
-        - $ref: '#/components/parameters/OrderId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateOrderDto'
-      responses:
-        '200':
-          description: 更新成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderEntity'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-    delete:
-      tags:
-        - 订单管理
-      summary: 删除订单
-      description: 删除订单（仅待处理状态）
-      parameters:
-        - $ref: '#/components/parameters/OrderId'
-      responses:
-        '200':
-          description: 删除成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /orders/statistics:
-    get:
-      tags:
-        - 订单管理
-      summary: 获取订单统计信息
-      description: 获取订单数量和金额统计信息
-      responses:
-        '200':
-          description: 获取成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderStatistics'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
 
 components:
   securitySchemes:
@@ -576,785 +45,1301 @@ components:
       scheme: bearer
       bearerFormat: JWT
 
-  parameters:
-    Page:
-      name: page
-      in: query
-      description: 页码
-      schema:
-        type: integer
-        minimum: 1
-        default: 1
-    
-    Limit:
-      name: limit
-      in: query
-      description: 每页数量
-      schema:
-        type: integer
-        minimum: 1
-        maximum: 100
-        default: 10
-    
-    UserId:
-      name: id
-      in: path
-      required: true
-      description: 用户ID
-      schema:
-        type: integer
-    
-    PatientId:
-      name: id
-      in: path
-      required: true
-      description: 就诊人ID
-      schema:
-        type: integer
-    
-    OrderId:
-      name: id
-      in: path
-      required: true
-      description: 订单ID
-      schema:
-        type: integer
-
   schemas:
-    # 枚举类型
-    UserRole:
-      type: string
-      enum: [ADMIN, USER]
-      description: 用户角色
-    
-    UserStatus:
-      type: string
-      enum: [ACTIVE, INACTIVE]
-      description: 用户状态
-    
-    Gender:
-      type: string
-      enum: [MALE, FEMALE, OTHER]
-      description: 性别
-    
-    OrderStatus:
-      type: string
-      enum: [PENDING, PROCESSING, COMPLETED, CANCELLED]
-      description: 订单状态
-    
-    OrderType:
-      type: string
-      enum: [MEDICAL, HEALTH_CHECK, CONSULTATION]
-      description: 订单类型
-
-    # 认证相关
-    LoginDto:
-      type: object
-      required: [phone, password]
-      properties:
-        phone:
-          type: string
-          pattern: '^1[3-9]\d{9}$'
-          description: 手机号
-          example: '13800138000'
-        password:
-          type: string
-          minLength: 6
-          description: 密码
-          example: 'password123'
-    
-    RegisterDto:
-      type: object
-      required: [name, phone, email, idCard, password, confirmPassword]
-      properties:
-        name:
-          type: string
-          minLength: 2
-          maxLength: 50
-          description: 姓名
-          example: '张三'
-        phone:
-          type: string
-          pattern: '^1[3-9]\d{9}$'
-          description: 手机号
-          example: '13800138000'
-        email:
-          type: string
-          format: email
-          description: 邮箱
-          example: 'zhangsan@example.com'
-        idCard:
-          type: string
-          pattern: '^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$'
-          description: 身份证号
-          example: '110101199001011234'
-        password:
-          type: string
-          minLength: 6
-          description: 密码
-          example: 'password123'
-        confirmPassword:
-          type: string
-          description: 确认密码
-          example: 'password123'
-
-    # 用户相关
-    CreateUserDto:
-      type: object
-      required: [name, phone, email, idCard, password, role]
-      properties:
-        name:
-          type: string
-          minLength: 2
-          maxLength: 50
-          description: 姓名
-          example: '张三'
-        phone:
-          type: string
-          pattern: '^1[3-9]\d{9}$'
-          description: 手机号
-          example: '13800138000'
-        email:
-          type: string
-          format: email
-          description: 邮箱
-          example: 'zhangsan@example.com'
-        idCard:
-          type: string
-          pattern: '^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$'
-          description: 身份证号
-          example: '110101199001011234'
-        password:
-          type: string
-          minLength: 6
-          description: 密码
-          example: 'password123'
-        role:
-          $ref: '#/components/schemas/UserRole'
-    
-    UpdateUserDto:
+    # 通用响应结构
+    ApiResponse:
       type: object
       properties:
-        name:
-          type: string
-          minLength: 2
-          maxLength: 50
-          description: 姓名
-        phone:
-          type: string
-          pattern: '^1[3-9]\d{9}$'
-          description: 手机号
-        email:
-          type: string
-          format: email
-          description: 邮箱
-        idCard:
-          type: string
-          pattern: '^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$'
-          description: 身份证号
-        status:
-          $ref: '#/components/schemas/UserStatus'
-    
-    UserEntity:
-      type: object
-      properties:
-        id:
+        code:
           type: integer
-          description: 用户ID
-          example: 1
-        name:
-          type: string
-          description: 姓名
-          example: '张三'
-        phone:
-          type: string
-          description: 手机号
-          example: '13800138000'
-        email:
-          type: string
-          description: 邮箱
-          example: 'zhangsan@example.com'
-        idCard:
-          type: string
-          description: 身份证号
-          example: '110101199001011234'
-        role:
-          $ref: '#/components/schemas/UserRole'
-        status:
-          $ref: '#/components/schemas/UserStatus'
-        createdAt:
-          type: string
-          format: date-time
-          description: 创建时间
-        updatedAt:
-          type: string
-          format: date-time
-          description: 更新时间
-
-    # 就诊人相关
-    CreatePatientDto:
-      type: object
-      required: [name, gender, birthday, phone, idCard, relationship]
-      properties:
-        name:
-          type: string
-          minLength: 2
-          maxLength: 50
-          description: 姓名
-          example: '李四'
-        gender:
-          $ref: '#/components/schemas/Gender'
-        birthday:
-          type: string
-          format: date
-          description: 生日
-          example: '1990-01-01'
-        phone:
-          type: string
-          pattern: '^1[3-9]\d{9}$'
-          description: 手机号
-          example: '13900139000'
-        idCard:
-          type: string
-          pattern: '^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$'
-          description: 身份证号
-          example: '110101199001011235'
-        medicalInsurance:
-          type: string
-          description: 医保信息
-          example: '城镇职工医保'
-        relationship:
-          type: string
-          description: 与用户关系
-          example: '本人'
-        emergencyContact:
-          type: string
-          description: 紧急联系人
-          example: '王五 13700137000'
-        allergies:
-          type: string
-          description: 过敏史
-          example: '青霉素过敏'
-        medicalHistory:
-          type: string
-          description: 病史
-          example: '高血压'
-    
-    UpdatePatientDto:
-      type: object
-      properties:
-        name:
-          type: string
-          minLength: 2
-          maxLength: 50
-          description: 姓名
-        gender:
-          $ref: '#/components/schemas/Gender'
-        birthday:
-          type: string
-          format: date
-          description: 生日
-        phone:
-          type: string
-          pattern: '^1[3-9]\d{9}$'
-          description: 手机号
-        idCard:
-          type: string
-          pattern: '^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$'
-          description: 身份证号
-        medicalInsurance:
-          type: string
-          description: 医保信息
-        relationship:
-          type: string
-          description: 与用户关系
-        emergencyContact:
-          type: string
-          description: 紧急联系人
-        allergies:
-          type: string
-          description: 过敏史
-        medicalHistory:
-          type: string
-          description: 病史
-    
-    PatientEntity:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: 就诊人ID
-          example: 1
-        userId:
-          type: integer
-          description: 用户ID
-          example: 1
-        name:
-          type: string
-          description: 姓名
-          example: '李四'
-        gender:
-          $ref: '#/components/schemas/Gender'
-        birthday:
-          type: string
-          format: date
-          description: 生日
-          example: '1990-01-01'
-        phone:
-          type: string
-          description: 手机号
-          example: '13900139000'
-        idCard:
-          type: string
-          description: 身份证号
-          example: '110101199001011235'
-        medicalInsurance:
-          type: string
-          description: 医保信息
-          example: '城镇职工医保'
-        relationship:
-          type: string
-          description: 与用户关系
-          example: '本人'
-        emergencyContact:
-          type: string
-          description: 紧急联系人
-          example: '王五 13700137000'
-        allergies:
-          type: string
-          description: 过敏史
-          example: '青霉素过敏'
-        medicalHistory:
-          type: string
-          description: 病史
-          example: '高血压'
-        createdAt:
-          type: string
-          format: date-time
-          description: 创建时间
-        updatedAt:
-          type: string
-          format: date-time
-          description: 更新时间
-
-    # 订单相关
-    CreateOrderItemDto:
-      type: object
-      required: [itemName, price, quantity]
-      properties:
-        itemName:
-          type: string
-          description: 服务项目名称
-          example: '血常规检查'
-        itemCode:
-          type: string
-          description: 服务项目代码
-          example: 'BC001'
-        price:
-          type: number
-          format: decimal
-          minimum: 0
-          description: 单价
-          example: 50.00
-        quantity:
-          type: integer
-          minimum: 1
-          description: 数量
-          example: 1
-        category:
-          type: string
-          description: 服务类别
-          example: '检验'
-    
-    CreateOrderDto:
-      type: object
-      required: [patientId, items]
-      properties:
-        patientId:
-          type: integer
-          description: 就诊人ID
-          example: 1
-        orderType:
-          $ref: '#/components/schemas/OrderType'
-        description:
-          type: string
-          description: 订单描述
-          example: '常规体检'
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/CreateOrderItemDto'
-          description: 订单项目列表
-    
-    UpdateOrderDto:
-      type: object
-      properties:
-        patientId:
-          type: integer
-          description: 就诊人ID
-        orderType:
-          $ref: '#/components/schemas/OrderType'
-        description:
-          type: string
-          description: 订单描述
-        status:
-          $ref: '#/components/schemas/OrderStatus'
-    
-    OrderItemEntity:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: 订单项目ID
-          example: 1
-        orderId:
-          type: integer
-          description: 订单ID
-          example: 1
-        itemName:
-          type: string
-          description: 服务项目名称
-          example: '血常规检查'
-        itemCode:
-          type: string
-          description: 服务项目代码
-          example: 'BC001'
-        price:
-          type: number
-          format: decimal
-          description: 单价
-          example: 50.00
-        quantity:
-          type: integer
-          description: 数量
-          example: 1
-        subtotal:
-          type: number
-          format: decimal
-          description: 小计
-          example: 50.00
-        category:
-          type: string
-          description: 服务类别
-          example: '检验'
-        createdAt:
-          type: string
-          format: date-time
-          description: 创建时间
-        updatedAt:
-          type: string
-          format: date-time
-          description: 更新时间
-    
-    OrderEntity:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: 订单ID
-          example: 1
-        orderNumber:
-          type: string
-          description: 订单号
-          example: 'ORD1640995200000001'
-        userId:
-          type: integer
-          description: 用户ID
-          example: 1
-        patientId:
-          type: integer
-          description: 就诊人ID
-          example: 1
-        orderType:
-          $ref: '#/components/schemas/OrderType'
-        status:
-          $ref: '#/components/schemas/OrderStatus'
-        description:
-          type: string
-          description: 订单描述
-          example: '常规体检'
-        totalAmount:
-          type: number
-          format: decimal
-          description: 订单总金额
-          example: 150.00
-        createdAt:
-          type: string
-          format: date-time
-          description: 创建时间
-        updatedAt:
-          type: string
-          format: date-time
-          description: 更新时间
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrderItemEntity'
-          description: 订单项目列表
-        patient:
-          type: object
-          description: 就诊人信息
-        user:
-          type: object
-          description: 用户信息
-
-    # 分页和统计
-    PaginatedUsers:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/UserEntity'
-        total:
-          type: integer
-          description: 总数量
-        page:
-          type: integer
-          description: 当前页码
-        limit:
-          type: integer
-          description: 每页数量
-        totalPages:
-          type: integer
-          description: 总页数
-    
-    PaginatedPatients:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/PatientEntity'
-        total:
-          type: integer
-          description: 总数量
-        page:
-          type: integer
-          description: 当前页码
-        limit:
-          type: integer
-          description: 每页数量
-        totalPages:
-          type: integer
-          description: 总页数
-    
-    PaginatedOrders:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrderEntity'
-        total:
-          type: integer
-          description: 总数量
-        page:
-          type: integer
-          description: 当前页码
-        limit:
-          type: integer
-          description: 每页数量
-        totalPages:
-          type: integer
-          description: 总页数
-    
-    UserStatistics:
-      type: object
-      properties:
-        total:
-          type: integer
-          description: 总用户数
-        active:
-          type: integer
-          description: 活跃用户数
-        inactive:
-          type: integer
-          description: 非活跃用户数
-        admin:
-          type: integer
-          description: 管理员数
-        user:
-          type: integer
-          description: 普通用户数
-    
-    OrderStatistics:
-      type: object
-      properties:
-        total:
-          type: integer
-          description: 总订单数
-        pending:
-          type: integer
-          description: 待处理订单数
-        processing:
-          type: integer
-          description: 处理中订单数
-        completed:
-          type: integer
-          description: 已完成订单数
-        cancelled:
-          type: integer
-          description: 已取消订单数
-        totalAmount:
-          type: number
-          format: decimal
-          description: 总金额
-    
-    SuccessMessage:
-      type: object
-      properties:
+          description: 响应状态码
+          example: 200
         message:
           type: string
-          description: 成功消息
-          example: '操作成功'
-    
-    ErrorResponse:
-      type: object
-      properties:
-        statusCode:
-          type: integer
-          description: HTTP状态码
-        message:
-          type: string
-          description: 错误消息
-        error:
-          type: string
-          description: 错误类型
+          description: 响应消息
+          example: "操作成功"
+        data:
+          description: 响应数据
         timestamp:
           type: string
           format: date-time
-          description: 错误时间
-        path:
-          type: string
-          description: 请求路径
+          description: 响应时间
 
-  responses:
-    BadRequest:
-      description: 请求参数错误
-      content:
-        application/json:
+    PaginationResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                items:
+                  type: array
+                  description: 数据列表
+                total:
+                  type: integer
+                  description: 总记录数
+                page:
+                  type: integer
+                  description: 当前页码
+                pageSize:
+                  type: integer
+                  description: 每页数量
+                totalPages:
+                  type: integer
+                  description: 总页数
+
+    # 角色相关
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 角色ID
+        name:
+          type: string
+          description: 角色名称
+        code:
+          type: string
+          description: 角色代码
+        description:
+          type: string
+          description: 角色描述
+        isEnabled:
+          type: boolean
+          description: 是否启用
+        sortOrder:
+          type: integer
+          description: 排序
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新时间
+
+    CreateRoleDto:
+      type: object
+      required:
+        - name
+        - code
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: 角色名称
+        code:
+          type: string
+          maxLength: 50
+          description: 角色代码
+        description:
+          type: string
+          description: 角色描述
+        isEnabled:
+          type: boolean
+          default: true
+          description: 是否启用
+        sortOrder:
+          type: integer
+          default: 0
+          description: 排序
+
+    # 权限相关
+    Permission:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 权限ID
+        name:
+          type: string
+          description: 权限名称
+        code:
+          type: string
+          description: 权限代码
+        description:
+          type: string
+          description: 权限描述
+        parentId:
+          type: integer
+          description: 父权限ID
+        type:
+          type: string
+          enum: [MENU, BUTTON, API]
+          description: 权限类型
+        resource:
+          type: string
+          description: 资源路径
+        action:
+          type: string
+          description: 操作动作
+        isEnabled:
+          type: boolean
+          description: 是否启用
+        sortOrder:
+          type: integer
+          description: 排序
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+          description: 子权限
+
+    # 系统参数相关
+    SystemParam:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 参数ID
+        paramKey:
+          type: string
+          description: 参数键名
+        paramValue:
+          type: string
+          description: 参数值
+        paramName:
+          type: string
+          description: 参数名称
+        paramDescription:
+          type: string
+          description: 参数描述
+        paramType:
+          type: string
+          enum: [STRING, NUMBER, BOOLEAN, JSON]
+          description: 参数类型
+        paramGroup:
+          type: string
+          description: 参数分组
+        isSystem:
+          type: boolean
+          description: 是否为系统参数
+        isEnabled:
+          type: boolean
+          description: 是否启用
+
+    # 字典相关
+    Dictionary:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 字典ID
+        dictType:
+          type: string
+          description: 字典类型
+        dictName:
+          type: string
+          description: 字典名称
+        description:
+          type: string
+          description: 字典描述
+        isEnabled:
+          type: boolean
+          description: 是否启用
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DictionaryItem'
+          description: 字典项列表
+
+    DictionaryItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 字典项ID
+        itemLabel:
+          type: string
+          description: 字典项标签
+        itemValue:
+          type: string
+          description: 字典项值
+        description:
+          type: string
+          description: 字典项描述
+        extraData:
+          type: object
+          description: 扩展数据
+        isEnabled:
+          type: boolean
+          description: 是否启用
+
+    # 操作日志相关
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 日志ID
+        userId:
+          type: integer
+          description: 操作用户ID
+        userName:
+          type: string
+          description: 操作用户名
+        operationModule:
+          type: string
+          description: 操作模块
+        operationAction:
+          type: string
+          description: 操作动作
+        operationDescription:
+          type: string
+          description: 操作描述
+        targetType:
+          type: string
+          description: 目标资源类型
+        targetId:
+          type: string
+          description: 目标资源ID
+        ipAddress:
+          type: string
+          description: IP地址
+        operationResult:
+          type: string
+          enum: [SUCCESS, FAILED]
+          description: 操作结果
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+
+    # 通知相关
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 通知ID
+        title:
+          type: string
+          description: 通知标题
+        content:
+          type: string
+          description: 通知内容
+        type:
+          type: string
+          description: 通知类型
+        level:
+          type: string
+          enum: [INFO, WARNING, ERROR, SUCCESS]
+          description: 通知级别
+        senderId:
+          type: integer
+          description: 发送者ID
+        senderName:
+          type: string
+          description: 发送者姓名
+        isRead:
+          type: boolean
+          description: 是否已读
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+
+    # 备份相关
+    Backup:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 备份ID
+        name:
+          type: string
+          description: 备份名称
+        description:
+          type: string
+          description: 备份描述
+        type:
+          type: string
+          enum: [FULL, INCREMENTAL, DIFFERENTIAL]
+          description: 备份类型
+        status:
+          type: string
+          enum: [PENDING, RUNNING, COMPLETED, FAILED, CANCELLED]
+          description: 备份状态
+        fileSize:
+          type: integer
+          description: 文件大小(字节)
+        duration:
+          type: integer
+          description: 耗时(秒)
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+
+paths:
+  # 角色管理
+  /api/system/roles:
+    get:
+      tags:
+        - 角色管理
+      summary: 获取角色列表
+      parameters:
+        - name: page
+          in: query
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            statusCode: 400
-            message: '请求参数错误'
-            error: 'Bad Request'
-            timestamp: '2023-12-01T10:00:00.000Z'
-            path: '/api/v1/users'
-    
-    Unauthorized:
-      description: 未授权
-      content:
-        application/json:
+            type: integer
+            default: 1
+          description: 页码
+        - name: pageSize
+          in: query
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            statusCode: 401
-            message: '未授权访问'
-            error: 'Unauthorized'
-            timestamp: '2023-12-01T10:00:00.000Z'
-            path: '/api/v1/users'
-    
-    Forbidden:
-      description: 权限不足
-      content:
-        application/json:
+            type: integer
+            default: 10
+          description: 每页数量
+        - name: keyword
+          in: query
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            statusCode: 403
-            message: '权限不足'
-            error: 'Forbidden'
-            timestamp: '2023-12-01T10:00:00.000Z'
-            path: '/api/v1/users'
-    
-    NotFound:
-      description: 资源不存在
-      content:
-        application/json:
+            type: string
+          description: 搜索关键词
+        - name: isEnabled
+          in: query
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            statusCode: 404
-            message: '资源不存在'
-            error: 'Not Found'
-            timestamp: '2023-12-01T10:00:00.000Z'
-            path: '/api/v1/users/999'
-    
-    Conflict:
-      description: 资源冲突
-      content:
-        application/json:
+            type: boolean
+          description: 是否启用
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginationResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Role'
+
+    post:
+      tags:
+        - 角色管理
+      summary: 创建角色
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleDto'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Role'
+        '400':
+          description: 请求参数错误
+        '409':
+          description: 角色代码已存在
+
+  /api/system/roles/{id}:
+    get:
+      tags:
+        - 角色管理
+      summary: 获取角色详情
+      parameters:
+        - name: id
+          in: path
+          required: true
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            statusCode: 409
-            message: '手机号已存在'
-            error: 'Conflict'
-            timestamp: '2023-12-01T10:00:00.000Z'
-            path: '/api/v1/users'
+            type: integer
+          description: 角色ID
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Role'
+        '404':
+          description: 角色不存在
+
+    put:
+      tags:
+        - 角色管理
+      summary: 更新角色
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 角色ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleDto'
+      responses:
+        '200':
+          description: 更新成功
+        '404':
+          description: 角色不存在
+
+    delete:
+      tags:
+        - 角色管理
+      summary: 删除角色
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 角色ID
+      responses:
+        '200':
+          description: 删除成功
+        '404':
+          description: 角色不存在
+
+  # 权限管理
+  /api/system/permissions:
+    get:
+      tags:
+        - 权限管理
+      summary: 获取权限列表
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [MENU, BUTTON, API]
+          description: 权限类型
+        - name: parentId
+          in: query
+          schema:
+            type: integer
+          description: 父权限ID
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Permission'
+
+  /api/system/permissions/tree:
+    get:
+      tags:
+        - 权限管理
+      summary: 获取权限树
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Permission'
+
+  # 角色权限关联
+  /api/system/roles/{roleId}/permissions:
+    get:
+      tags:
+        - 角色管理
+      summary: 获取角色权限
+      parameters:
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 角色ID
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: integer
+                        description: 权限ID列表
+
+    put:
+      tags:
+        - 角色管理
+      summary: 分配角色权限
+      parameters:
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 角色ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permissionIds:
+                  type: array
+                  items:
+                    type: integer
+                  description: 权限ID列表
+      responses:
+        '200':
+          description: 分配成功
+
+  # 系统参数管理
+  /api/system/params:
+    get:
+      tags:
+        - 系统参数
+      summary: 获取系统参数列表
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: keyword
+          in: query
+          schema:
+            type: string
+          description: 搜索关键词
+        - name: paramGroup
+          in: query
+          schema:
+            type: string
+          description: 参数分组
+        - name: paramType
+          in: query
+          schema:
+            type: string
+            enum: [STRING, NUMBER, BOOLEAN, JSON]
+          description: 参数类型
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginationResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/SystemParam'
+
+  /api/system/params/{key}:
+    get:
+      tags:
+        - 系统参数
+      summary: 根据键名获取参数值
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 参数键名
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: string
+                        description: 参数值
+
+  # 字典管理
+  /api/system/dictionaries:
+    get:
+      tags:
+        - 字典管理
+      summary: 获取字典类型列表
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Dictionary'
+
+  /api/system/dictionaries/{type}/items:
+    get:
+      tags:
+        - 字典管理
+      summary: 根据类型获取字典项
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 字典类型
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DictionaryItem'
+
+  # 操作日志
+  /api/system/audit-logs:
+    get:
+      tags:
+        - 操作日志
+      summary: 获取操作日志列表
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: keyword
+          in: query
+          schema:
+            type: string
+          description: 搜索关键词
+        - name: operationModule
+          in: query
+          schema:
+            type: string
+          description: 操作模块
+        - name: operationAction
+          in: query
+          schema:
+            type: string
+          description: 操作动作
+        - name: operationResult
+          in: query
+          schema:
+            type: string
+            enum: [SUCCESS, FAILED]
+          description: 操作结果
+        - name: startTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: 开始时间
+        - name: endTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: 结束时间
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginationResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/AuditLog'
+
+    post:
+      tags:
+        - 操作日志
+      summary: 创建操作日志
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - operationModule
+                - operationAction
+                - operationResult
+              properties:
+                userId:
+                  type: integer
+                  description: 操作用户ID
+                operationModule:
+                  type: string
+                  description: 操作模块
+                operationAction:
+                  type: string
+                  description: 操作动作
+                operationDescription:
+                  type: string
+                  description: 操作描述
+                targetType:
+                  type: string
+                  description: 目标资源类型
+                targetId:
+                  type: string
+                  description: 目标资源ID
+                operationResult:
+                  type: string
+                  enum: [SUCCESS, FAILED]
+                  description: 操作结果
+      responses:
+        '201':
+          description: 创建成功
+
+  # 消息通知
+  /api/system/notifications:
+    get:
+      tags:
+        - 消息通知
+      summary: 获取通知列表
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: type
+          in: query
+          schema:
+            type: string
+          description: 通知类型
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [INFO, WARNING, ERROR, SUCCESS]
+          description: 通知级别
+        - name: isRead
+          in: query
+          schema:
+            type: boolean
+          description: 是否已读
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginationResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Notification'
+
+    post:
+      tags:
+        - 消息通知
+      summary: 创建通知
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+                - type
+                - level
+                - receiverType
+              properties:
+                title:
+                  type: string
+                  maxLength: 200
+                  description: 通知标题
+                content:
+                  type: string
+                  description: 通知内容
+                type:
+                  type: string
+                  description: 通知类型
+                level:
+                  type: string
+                  enum: [INFO, WARNING, ERROR, SUCCESS]
+                  description: 通知级别
+                receiverType:
+                  type: string
+                  enum: [USER, ROLE, ALL]
+                  description: 接收者类型
+                receiverIds:
+                  type: array
+                  items:
+                    type: integer
+                  description: 接收者ID列表
+      responses:
+        '201':
+          description: 创建成功
+
+  /api/system/notifications/my:
+    get:
+      tags:
+        - 消息通知
+      summary: 获取我的通知
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: isRead
+          in: query
+          schema:
+            type: boolean
+          description: 是否已读
+      responses:
+        '200':
+          description: 成功
+
+  /api/system/notifications/{id}/read:
+    put:
+      tags:
+        - 消息通知
+      summary: 标记通知已读
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 通知ID
+      responses:
+        '200':
+          description: 标记成功
+
+  # 数据备份
+  /api/system/backups:
+    get:
+      tags:
+        - 数据备份
+      summary: 获取备份列表
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [FULL, INCREMENTAL, DIFFERENTIAL]
+          description: 备份类型
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, RUNNING, COMPLETED, FAILED, CANCELLED]
+          description: 备份状态
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginationResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Backup'
+
+    post:
+      tags:
+        - 数据备份
+      summary: 创建备份任务
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - type
+                - scope
+                - compression
+              properties:
+                name:
+                  type: string
+                  maxLength: 200
+                  description: 备份名称
+                description:
+                  type: string
+                  description: 备份描述
+                type:
+                  type: string
+                  enum: [FULL, INCREMENTAL, DIFFERENTIAL]
+                  description: 备份类型
+                scope:
+                  type: array
+                  items:
+                    type: string
+                  description: 备份范围
+                compression:
+                  type: string
+                  enum: [ZIP, TAR, GZIP]
+                  description: 压缩格式
+                isEncrypted:
+                  type: boolean
+                  default: false
+                  description: 是否加密
+                password:
+                  type: string
+                  description: 备份密码
+      responses:
+        '201':
+          description: 创建成功
+
+  /api/system/backups/{id}/restore:
+    post:
+      tags:
+        - 数据备份
+      summary: 恢复数据
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 备份ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  description: 恢复密码
+                scope:
+                  type: array
+                  items:
+                    type: string
+                  description: 恢复范围
+                overwrite:
+                  type: boolean
+                  default: false
+                  description: 是否覆盖现有数据
+                backupCurrent:
+                  type: boolean
+                  default: true
+                  description: 是否备份当前数据
+      responses:
+        '200':
+          description: 恢复成功
+
+  /api/system/backups/{id}/download:
+    get:
+      tags:
+        - 数据备份
+      summary: 下载备份文件
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 备份ID
+      responses:
+        '200':
+          description: 下载成功
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+tags:
+  - name: 角色管理
+    description: 角色相关接口
+  - name: 权限管理
+    description: 权限相关接口
+  - name: 系统参数
+    description: 系统参数相关接口
+  - name: 字典管理
+    description: 字典相关接口
+  - name: 操作日志
+    description: 操作日志相关接口
+  - name: 消息通知
+    description: 消息通知相关接口
+  - name: 数据备份
+    description: 数据备份相关接口
 ```
 
-## 错误处理
+## 错误码说明
 
-### 标准错误响应格式
+| 错误码 | 说明 | 描述 |
+|--------|------|------|
+| 200 | OK | 请求成功 |
+| 201 | Created | 创建成功 |
+| 400 | Bad Request | 请求参数错误 |
+| 401 | Unauthorized | 未授权，需要登录 |
+| 403 | Forbidden | 禁止访问，权限不足 |
+| 404 | Not Found | 资源不存在 |
+| 409 | Conflict | 资源冲突，如重复创建 |
+| 422 | Unprocessable Entity | 请求参数验证失败 |
+| 500 | Internal Server Error | 服务器内部错误 |
+
+## 请求示例
+
+### 创建角色
+
+```bash
+curl -X POST http://localhost:3000/api/system/roles \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "name": "管理员",
+    "code": "admin",
+    "description": "系统管理员角色",
+    "isEnabled": true,
+    "sortOrder": 1
+  }'
+```
+
+### 获取角色列表
+
+```bash
+curl -X GET "http://localhost:3000/api/system/roles?page=1&pageSize=10&keyword=管理" \
+  -H "Authorization: Bearer <token>"
+```
+
+### 分配角色权限
+
+```bash
+curl -X PUT http://localhost:3000/api/system/roles/1/permissions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "permissionIds": [1, 2, 3, 4, 5]
+  }'
+```
+
+### 创建系统参数
+
+```bash
+curl -X POST http://localhost:3000/api/system/params \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "paramKey": "system.title",
+    "paramValue": "系统管理平台",
+    "paramName": "系统标题",
+    "paramDescription": "系统首页显示的标题",
+    "paramType": "STRING",
+    "paramGroup": "基础配置"
+  }'
+```
+
+### 发送通知
+
+```bash
+curl -X POST http://localhost:3000/api/system/notifications \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "title": "系统维护通知",
+    "content": "系统将于今晚22:00-24:00进行维护，请提前保存工作。",
+    "type": "SYSTEM",
+    "level": "WARNING",
+    "receiverType": "ALL"
+  }'
+```
+
+### 创建备份任务
+
+```bash
+curl -X POST http://localhost:3000/api/system/backups \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "name": "每日全量备份",
+    "description": "每日凌晨自动全量备份",
+    "type": "FULL",
+    "scope": ["users", "roles", "permissions"],
+    "compression": "GZIP",
+    "isEncrypted": true,
+    "password": "backup123"
+  }'
+```
+
+## 响应示例
+
+### 成功响应
 
 ```json
 {
-  "statusCode": 400,
-  "message": "错误描述",
-  "error": "错误类型",
-  "timestamp": "2023-12-01T10:00:00.000Z",
-  "path": "/api/v1/endpoint"
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    "id": 1,
+    "name": "管理员",
+    "code": "admin",
+    "description": "系统管理员角色",
+    "isEnabled": true,
+    "sortOrder": 1,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  },
+  "timestamp": "2024-01-01T00:00:00.000Z"
 }
 ```
 
-### 常见错误码
+### 分页响应
 
-- `400 Bad Request`: 请求参数错误
-- `401 Unauthorized`: 未授权访问
-- `403 Forbidden`: 权限不足
-- `404 Not Found`: 资源不存在
-- `409 Conflict`: 资源冲突（如手机号已存在）
-- `422 Unprocessable Entity`: 数据验证失败
-- `429 Too Many Requests`: 请求频率超限
-- `500 Internal Server Error`: 服务器内部错误
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "name": "管理员",
+        "code": "admin",
+        "description": "系统管理员角色",
+        "isEnabled": true,
+        "sortOrder": 1,
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "updatedAt": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "total": 1,
+    "page": 1,
+    "pageSize": 10,
+    "totalPages": 1
+  },
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
 
-## 数据验证
+### 错误响应
 
-### 手机号格式
-- 正则表达式: `^1[3-9]\d{9}$`
-- 示例: `13800138000`
+```json
+{
+  "code": 400,
+  "message": "请求参数错误",
+  "data": {
+    "errors": [
+      {
+        "field": "name",
+        "message": "角色名称不能为空"
+      },
+      {
+        "field": "code",
+        "message": "角色代码不能为空"
+      }
+    ]
+  },
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
 
-### 身份证号格式
-- 正则表达式: `^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$`
-- 示例: `110101199001011234`
+## 注意事项
 
-### 邮箱格式
-- 标准邮箱格式验证
-- 示例: `user@example.com`
-
-## 分页参数
-
-所有列表接口都支持分页参数：
-
-- `page`: 页码，从1开始，默认为1
-- `limit`: 每页数量，范围1-100，默认为10
-
-## 搜索和筛选
-
-支持的搜索和筛选参数：
-
-- `keyword`: 关键词搜索（姓名、手机号等）
-- `status`: 状态筛选
-- `role`: 角色筛选
-- `orderType`: 订单类型筛选
-
-## 版本控制
-
-当前 API 版本为 v1，通过 URL 路径进行版本控制：`/api/v1/`
-
-## 联系方式
-
-如有问题或建议，请联系开发团队：dev@medical-system.com
+1. **认证要求**: 除了公开接口外，所有接口都需要在请求头中携带有效的JWT Token
+2. **权限控制**: 不同的接口需要不同的权限，请确保用户具有相应的操作权限
+3. **参数验证**: 请求参数会进行严格验证，不符合要求的请求会返回400错误
+4. **数据格式**: 所有时间字段均使用ISO 8601格式（YYYY-MM-DDTHH:mm:ss.sssZ）
+5. **文件上传**: 备份文件等大文件操作可能需要较长时间，请设置合适的超时时间
+6. **并发控制**: 某些操作（如数据备份恢复）不支持并发执行，请避免重复提交
+7. **日志记录**: 所有重要操作都会记录到操作日志中，便于审计和追踪

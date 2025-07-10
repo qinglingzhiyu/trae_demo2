@@ -33,6 +33,7 @@ model User {
   updatedPatients Patient[] @relation("PatientUpdatedBy")
   updatedUsers    User[]    @relation("UserUpdatedBy")
   updater         User?     @relation("UserUpdatedBy", fields: [updatedBy], references: [id])
+  userRoles       UserRole[]
 
   @@map("users")
 }
@@ -170,6 +171,210 @@ model MedicalRecord {
   patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
   @@map("medical_records")
+}
+
+// 系统参数表
+model SystemParam {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String
+  type        String   @default("string") // string, number, boolean, json
+  category    String   @default("general")
+  description String?
+  isSystem    Boolean  @default(false) @map("is_system")
+  deletedAt   DateTime? @map("deleted_at") // 软删除字段
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("system_params")
+}
+
+// 角色表
+model Role {
+  id          Int       @id @default(autoincrement())
+  name        String
+  code        String    @unique
+  description String?
+  enabled     Boolean   @default(true)
+  isSystem    Boolean   @default(false) @map("is_system")
+  sort        Int       @default(0)
+  deletedAt   DateTime? @map("deleted_at") // 软删除字段
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // 关联关系
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+// 权限表
+model Permission {
+  id        Int       @id @default(autoincrement())
+  name      String
+  code      String    @unique
+  type      String    @default("menu") // menu, button, api
+  parentId  Int?      @map("parent_id")
+  path      String?
+  icon      String?
+  sort      Int       @default(0)
+  enabled   Boolean   @default(true)
+  deletedAt DateTime? @map("deleted_at") // 软删除字段
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  // 关联关系
+  parent          Permission?      @relation("PermissionParent", fields: [parentId], references: [id])
+  children        Permission[]     @relation("PermissionParent")
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+// 用户角色关联表
+model UserRole {
+  id     Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  roleId Int @map("role_id")
+
+  // 关联关系
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+// 角色权限关联表
+model RolePermission {
+  id           Int @id @default(autoincrement())
+  roleId       Int @map("role_id")
+  permissionId Int @map("permission_id")
+
+  // 关联关系
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// 字典类型表
+model DictionaryType {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String   @unique
+  description String?
+  status      String   @default("active") // active, inactive
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  items DictionaryItem[]
+
+  @@map("dictionary_types")
+}
+
+// 字典项表
+model DictionaryItem {
+  id          Int      @id @default(autoincrement())
+  typeId      Int      @map("type_id")
+  label       String
+  value       String
+  sort        Int      @default(0)
+  status      String   @default("active") // active, inactive
+  description String?
+  parentId    Int?     @map("parent_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  type     DictionaryType  @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  parent   DictionaryItem? @relation("DictionaryItemParent", fields: [parentId], references: [id])
+  children DictionaryItem[] @relation("DictionaryItemParent")
+
+  @@map("dictionary_items")
+}
+
+// 操作日志表
+model AuditLog {
+  id           Int      @id @default(autoincrement())
+  userId       String   @map("user_id")
+  username     String
+  userRealName String   @map("user_real_name")
+  action       String
+  resource     String
+  resourceId   String?  @map("resource_id")
+  method       String
+  path         String
+  ip           String
+  userAgent    String   @map("user_agent")
+  requestData  String?  @map("request_data") // JSON string
+  responseData String?  @map("response_data") // JSON string
+  status       String   @default("success") // success, failed
+  errorMessage String?  @map("error_message")
+  duration     Int      @default(0) // 请求耗时(ms)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
+
+// 通知模板表
+model NotificationTemplate {
+  id        Int      @id @default(autoincrement())
+  name      String
+  type      String   // email, sms, system, push
+  title     String
+  content   String
+  variables String?  // JSON array of variable names
+  status    String   @default("active") // active, inactive
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 关联关系
+  records NotificationRecord[]
+
+  @@map("notification_templates")
+}
+
+// 通知记录表
+model NotificationRecord {
+  id            Int      @id @default(autoincrement())
+  templateId    Int      @map("template_id")
+  templateName  String   @map("template_name")
+  type          String   // email, sms, system, push
+  title         String
+  content       String
+  recipient     String
+  recipientType String   @map("recipient_type") // user, role, all
+  status        String   @default("pending") // pending, sent, failed, read
+  sentAt        DateTime? @map("sent_at")
+  readAt        DateTime? @map("read_at")
+  errorMessage  String?  @map("error_message")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // 关联关系
+  template NotificationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("notification_records")
+}
+
+// 数据备份表
+model Backup {
+  id          Int      @id @default(autoincrement())
+  name        String
+  type        String   @default("full") // full, incremental
+  status      String   @default("pending") // pending, running, completed, failed
+  filePath    String?  @map("file_path")
+  fileSize    Int?     @map("file_size")
+  description String?
+  errorMessage String? @map("error_message")
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("backups")
 }
 
 // 枚举定义
