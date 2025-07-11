@@ -48,17 +48,17 @@ export const authAPI = {
   register: (data: { phone: string; password: string; name: string }) => 
     api.post('/auth/register', data),
   logout: () => api.post('/auth/logout'),
-  getCurrentUser: () => api.get('/auth/me'),
+  getCurrentUser: () => api.get('/auth/profile'),
 };
 
 // 用户管理API
 export const userAPI = {
-  getUsers: (params?: { page?: number; limit?: number; search?: string }) => 
+  getUsers: (params?: { page?: number; limit?: number; search?: string; role?: string; status?: string }) => 
     api.get('/users', { params }),
   getUserById: (id: number) => api.get(`/users/${id}`),
   createUser: (data: Partial<User>) => api.post('/users', data),
-  updateUser: (id: number, data: Partial<User>) => api.put(`/users/${id}`, data),
-  deleteUser: (id: number) => api.delete(`/users/${id}`),
+  updateUser: (id: number, data: Partial<User>) => api.post(`/users/${id}/update`, data),
+  deleteUser: (id: number) => api.post(`/users/${id}/delete`),
   getUserStats: () => api.get('/users/statistics'),
 };
 
@@ -68,8 +68,8 @@ export const patientAPI = {
     api.get('/patients', { params }),
   getPatientById: (id: number) => api.get(`/patients/${id}`),
   createPatient: (data: Partial<Patient>) => api.post('/patients', data),
-  updatePatient: (id: number, data: Partial<Patient>) => api.put(`/patients/${id}`, data),
-  deletePatient: (id: number) => api.delete(`/patients/${id}`),
+  updatePatient: (id: number, data: Partial<Patient>) => api.post(`/patients/${id}/update`, data),
+  deletePatient: (id: number) => api.post(`/patients/${id}/delete`),
   getPatientStats: () => api.get('/patients/statistics'),
 };
 
@@ -79,8 +79,8 @@ export const orderAPI = {
     api.get('/orders', { params }),
   getOrderById: (id: number) => api.get(`/orders/${id}`),
   createOrder: (data: Partial<Order>) => api.post('/orders', data),
-  updateOrder: (id: number, data: Partial<Order>) => api.put(`/orders/${id}`, data),
-  deleteOrder: (id: number) => api.delete(`/orders/${id}`),
+  updateOrder: (id: number, data: Partial<Order>) => api.post(`/orders/${id}/update`, data),
+  deleteOrder: (id: number) => api.post(`/orders/${id}/delete`),
   getOrderStats: () => api.get('/orders/statistics'),
   getRecentOrders: (limit?: number) => api.get('/orders/recent', { params: { limit } }),
 };

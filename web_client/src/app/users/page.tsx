@@ -48,7 +48,12 @@ const UsersPage: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await usersApi.getUsers(queryParams);
+      // 添加角色筛选，只获取C端用户（USER角色），排除后台管理员
+      const params = {
+        ...queryParams,
+        role: queryParams.role || 'USER', // 默认只显示C端用户
+      };
+      const response = await usersApi.getUsers(params);
       setUsers(response.items);
       setTotal(response.total);
     } catch {
@@ -118,10 +123,7 @@ const UsersPage: React.FC = () => {
       key: 'role',
       render: (role: string) => {
         const roleMap: Record<string, { label: string; color: string }> = {
-          ADMIN: { label: '管理员', color: 'red' },
-          DOCTOR: { label: '医生', color: 'blue' },
-          NURSE: { label: '护士', color: 'green' },
-          RECEPTIONIST: { label: '前台', color: 'orange' },
+          USER: { label: 'C端用户', color: 'blue' },
         };
         const config = roleMap[role] || { label: role, color: 'default' };
         return <Tag color={config.color}>{config.label}</Tag>;
@@ -191,8 +193,11 @@ const UsersPage: React.FC = () => {
         <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
           <Col>
             <Title level={2} style={{ margin: 0 }}>
-              用户管理
+              C端用户管理
             </Title>
+            <p style={{ margin: '4px 0 0 0', color: '#666' }}>
+              管理平台的C端用户，不包括后台管理员账号
+            </p>
           </Col>
           <Col>
             <Space>
@@ -208,7 +213,7 @@ const UsersPage: React.FC = () => {
                 icon={<PlusOutlined />}
                 onClick={() => router.push('/users/create')}
               >
-                新增用户
+                新增C端用户
               </Button>
             </Space>
           </Col>
@@ -242,10 +247,7 @@ const UsersPage: React.FC = () => {
                 allowClear
                 style={{ width: 150 }}
               >
-                <Option value="ADMIN">管理员</Option>
-                <Option value="DOCTOR">医生</Option>
-                <Option value="NURSE">护士</Option>
-                <Option value="RECEPTIONIST">前台</Option>
+                <Option value="USER">C端用户</Option>
               </Select>
             </Form.Item>
             <Form.Item name="status" style={{ marginBottom: 8 }}>

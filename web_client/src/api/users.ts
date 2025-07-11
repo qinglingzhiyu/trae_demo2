@@ -43,11 +43,11 @@ export const usersApi = {
 
   // 删除用户
   deleteUser: async (id: number): Promise<void> => {
-    return apiClient.delete(`/users/${id}`);
+    return apiClient.post(`/users/${id}/delete`);
   },
 
   // 获取用户统计信息
   getUserStats: async (): Promise<any> => {
-    return apiClient.get('/users/stats');
+    return apiClient.get('/users/statistics');
   },
 };

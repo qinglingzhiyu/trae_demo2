@@ -80,10 +80,31 @@ const PermissionsPage: React.FC = () => {
     try {
       setLoading(true);
       const response = await permissionAPI.getRoles();
-      setRoles(response.data?.items || []);
-    } catch (error) {
+      console.log('角色API响应:', response);
+      
+      // 处理不同的响应格式
+      let roleData: Role[] = [];
+      if (response.data) {
+        if (Array.isArray(response.data)) {
+          roleData = response.data as Role[];
+        } else if (response.data.items) {
+          roleData = response.data.items as Role[];
+        } else if (response.data.data) {
+          roleData = response.data.data as Role[];
+        }
+      } else if (Array.isArray(response)) {
+        roleData = response as Role[];
+      }
+      
+      console.log('处理后的角色数据:', roleData);
+      setRoles(roleData);
+    } catch (error: any) {
       console.error('加载角色数据失败:', error);
-      message.error('加载角色数据失败');
+      if (error.response?.status === 401) {
+        message.error('请先登录后再访问权限管理页面');
+      } else {
+        message.error(`加载角色数据失败: ${error.message || '未知错误'}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -92,21 +113,78 @@ const PermissionsPage: React.FC = () => {
   // 加载权限数据
   const loadPermissions = async () => {
     try {
+      setLoading(true);
       const response = await permissionAPI.getPermissionTree();
-      setPermissions(response.data || []);
-    } catch (error) {
+      console.log('权限API响应:', response);
+      
+      // 处理不同的响应格式
+      let permissionData: Permission[] = [];
+      if (response.data) {
+        if (Array.isArray(response.data)) {
+          permissionData = response.data as Permission[];
+        } else if (response.data.items) {
+          permissionData = response.data.items as Permission[];
+        } else if (response.data.data) {
+          permissionData = response.data.data as Permission[];
+        }
+      } else if (Array.isArray(response)) {
+        permissionData = response as Permission[];
+      }
+      
+      console.log('处理后的权限数据:', permissionData);
+      setPermissions(permissionData);
+    } catch (error: any) {
       console.error('加载权限数据失败:', error);
-      message.error('加载权限数据失败');
+      if (error.response?.status === 401) {
+        message.error('请先登录后再访问权限管理页面');
+      } else {
+        message.error(`加载权限数据失败: ${error.message || '未知错误'}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 加载用户角色数据
+  const loadUserRoles = async () => {
+    try {
+      setLoading(true);
+      // 这里应该调用用户管理API获取用户角色数据
+      // const response = await userAPI.getUserRoles();
+      // const userData: UserRoleAssignment[] = response.data?.items || [];
+      // setUserRoles(userData);
+      
+      // 暂时使用模拟数据
+      const userData: UserRoleAssignment[] = [];
+      setUserRoles(userData);
+    } catch (error) {
+      console.error('加载用户角色数据失败:', error);
+      message.error('加载用户角色数据失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 根据当前标签页加载对应数据
+  const loadTabData = (tabKey: string) => {
+    switch (tabKey) {
+      case 'roles':
+        loadRoles();
+        break;
+      case 'permissions':
+        loadPermissions();
+        break;
+      case 'userRoles':
+        loadUserRoles();
+        break;
+      default:
+        break;
     }
   };
 
   // 初始化数据
   useEffect(() => {
-    loadRoles();
-    loadPermissions();
-
-    // 模拟用户角色数据（暂时保留，后续可通过用户API获取）
-    setUserRoles([]);
+    loadTabData(activeTab);
   }, []);
 
   // 角色表格列配置
@@ -547,7 +625,7 @@ const PermissionsPage: React.FC = () => {
   const handlePermissionSubmit = async () => {
     try {
       setLoading(true);
-      const values = await permissionForm.validateFields();
+      await permissionForm.validateFields();
       
       if (editingPermission) {
         // 权限更新功能暂未在API中开放
@@ -652,7 +730,11 @@ const PermissionsPage: React.FC = () => {
 
         <Tabs 
           activeKey={activeTab} 
-          onChange={setActiveTab}
+          onChange={(key) => {
+            setActiveTab(key);
+            // 切换标签时重新加载对应数据
+            loadTabData(key);
+          }}
           size="large"
           tabBarStyle={{ marginBottom: '24px' }}
         >

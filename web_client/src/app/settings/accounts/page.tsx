@@ -36,53 +36,20 @@ import {
 import { useRouter } from 'next/navigation';
 import MainLayout from '../../../layouts/MainLayout';
 import type { ColumnsType } from 'antd/es/table';
+import { accountsApi, type Account, type AccountFormData, type AccountStatistics } from '@/api/accounts';
+import { permissionAPI, type Role } from '@/api/permission';
 
 const { Option } = Select;
 const { Search } = Input;
-
-// 定义数据类型
-interface Account {
-  id: number;
-  name: string;
-  phone: string;
-  email: string;
-  role: 'ADMIN' | 'DOCTOR' | 'NURSE';
-  status: 'ACTIVE' | 'INACTIVE';
-  department?: string;
-  createdAt: string;
-  updatedAt: string;
-  creator?: {
-    id: number;
-    name: string;
-  };
-}
-
-interface AccountFormData {
-  name: string;
-  phone: string;
-  email: string;
-  password?: string;
-  role: 'ADMIN' | 'DOCTOR' | 'NURSE';
-  department?: string;
-}
-
-interface Statistics {
-  total: number;
-  active: number;
-  inactive: number;
-  byRole: {
-    admin: number;
-    doctor: number;
-    nurse: number;
-  };
-}
 
 const AccountsManagement: React.FC = () => {
   const router = useRouter();
   const [form] = Form.useForm();
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [statistics, setStatistics] = useState<Statistics | null>(null);
+  const [statistics, setStatistics] = useState<AccountStatistics | null>(null);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
+  const [rolesLoading, setRolesLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -100,28 +67,22 @@ const AccountsManagement: React.FC = () => {
   const fetchAccounts = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: pagination.current.toString(),
-        limit: pagination.pageSize.toString(),
+      const params = {
+        page: pagination.current,
+        limit: pagination.pageSize,
         ...(searchText && { search: searchText }),
         ...(filterRole && { role: filterRole }),
         ...(filterStatus && { status: filterStatus }),
-      });
+      };
 
-      const response = await fetch(`http://localhost:4000/api/v1/accounts?${params}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        setAccounts(data.data);
-        setPagination(prev => ({
-          ...prev,
-          total: data.pagination.total,
-        }));
-      } else {
-        message.error(data.message || '获取账号列表失败');
-      }
-    } catch (error) {
-      message.error('网络错误，请稍后重试');
+      const data = await accountsApi.getAccounts(params);
+      setAccounts(data.data);
+      setPagination(prev => ({
+        ...prev,
+        total: data.pagination.total,
+      }));
+    } catch (error: any) {
+      message.error(error.response?.data?.message || '获取账号列表失败');
     } finally {
       setLoading(false);
     }
@@ -130,46 +91,66 @@ const AccountsManagement: React.FC = () => {
   // 获取统计数据
   const fetchStatistics = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/v1/accounts/statistics');
-      const data = await response.json();
-
-      if (response.ok) {
-        setStatistics(data);
-      }
+      const data = await accountsApi.getStatistics();
+      setStatistics(data);
     } catch (error) {
       console.error('获取统计数据失败:', error);
+    }
+  };
+
+  // 获取角色列表
+  const fetchRoles = async () => {
+    try {
+      setRolesLoading(true);
+      const response = await permissionAPI.getRoles();
+      console.log('角色API响应:', response);
+      
+      // 处理不同的响应格式
+      let roleData: Role[] = [];
+      if (response.data) {
+        if (Array.isArray(response.data)) {
+          roleData = response.data as Role[];
+        } else if (response.data.items) {
+          roleData = response.data.items as Role[];
+        } else if (response.data.data) {
+          roleData = response.data.data as Role[];
+        }
+      } else if (Array.isArray(response)) {
+        roleData = response as Role[];
+      }
+      
+      console.log('处理后的角色数据:', roleData);
+      setRoles(roleData);
+    } catch (error) {
+      console.error('获取角色列表失败:', error);
+      message.error('获取角色列表失败');
+    } finally {
+      setRolesLoading(false);
     }
   };
 
   useEffect(() => {
     fetchAccounts();
     fetchStatistics();
+    fetchRoles();
   }, [pagination.current, pagination.pageSize, searchText, filterRole, filterStatus]);
+
+  // 初始化时加载角色数据
+  useEffect(() => {
+    fetchRoles();
+  }, []);
 
   // 创建账号
   const handleCreate = async (values: AccountFormData) => {
     try {
-      const response = await fetch('http://localhost:4000/api/v1/accounts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        message.success('账号创建成功');
-        setModalVisible(false);
-        form.resetFields();
-        fetchAccounts();
-        fetchStatistics();
-      } else {
-        message.error(data.message || '创建账号失败');
-      }
-    } catch (error) {
-      message.error('网络错误，请稍后重试');
+      await accountsApi.createAccount(values);
+      message.success('账号创建成功');
+      setModalVisible(false);
+      form.resetFields();
+      fetchAccounts();
+      fetchStatistics();
+    } catch (error: any) {
+      message.error(error.response?.data?.message || '创建账号失败');
     }
   };
 
@@ -178,48 +159,26 @@ const AccountsManagement: React.FC = () => {
     if (!editingAccount) return;
 
     try {
-      const response = await fetch(`http://localhost:4000/api/v1/accounts/${editingAccount.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        message.success('账号更新成功');
-        setModalVisible(false);
-        setEditingAccount(null);
-        form.resetFields();
-        fetchAccounts();
-      } else {
-        message.error(data.message || '更新账号失败');
-      }
-    } catch (error) {
-      message.error('网络错误，请稍后重试');
+      await accountsApi.updateAccount(editingAccount.id, values);
+      message.success('账号更新成功');
+      setModalVisible(false);
+      setEditingAccount(null);
+      form.resetFields();
+      fetchAccounts();
+    } catch (error: any) {
+      message.error(error.response?.data?.message || '更新账号失败');
     }
   };
 
   // 切换账号状态
   const handleToggleStatus = async (account: Account) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/v1/accounts/${account.id}/toggle-status`, {
-        method: 'POST',
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        message.success(`账号已${account.status === 'ACTIVE' ? '禁用' : '启用'}`);
-        fetchAccounts();
-        fetchStatistics();
-      } else {
-        message.error(data.message || '操作失败');
-      }
-    } catch (error) {
-      message.error('网络错误，请稍后重试');
+      await accountsApi.toggleStatus(account.id);
+      message.success(`账号已${account.status === 'ACTIVE' ? '禁用' : '启用'}`);
+      fetchAccounts();
+      fetchStatistics();
+    } catch (error: any) {
+      message.error(error.response?.data?.message || '操作失败');
     }
   };
 
@@ -235,22 +194,10 @@ const AccountsManagement: React.FC = () => {
       ),
       onOk: async () => {
         try {
-          const response = await fetch(`http://localhost:4000/api/v1/accounts/${account.id}/reset-password`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ newPassword: '123456' }),
-          });
-
-          if (response.ok) {
-            message.success('密码重置成功，新密码为: 123456');
-          } else {
-            const data = await response.json();
-            message.error(data.message || '重置密码失败');
-          }
-        } catch (error) {
-          message.error('网络错误，请稍后重试');
+          await accountsApi.resetPassword(account.id, '123456');
+          message.success('密码重置成功，新密码为: 123456');
+        } catch (error: any) {
+          message.error(error.response?.data?.message || '重置密码失败');
         }
       },
     });
@@ -259,20 +206,12 @@ const AccountsManagement: React.FC = () => {
   // 删除账号
   const handleDelete = async (account: Account) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/v1/accounts/${account.id}/delete`, {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        message.success('账号删除成功');
-        fetchAccounts();
-        fetchStatistics();
-      } else {
-        const data = await response.json();
-        message.error(data.message || '删除账号失败');
-      }
-    } catch (error) {
-      message.error('网络错误，请稍后重试');
+      await accountsApi.deleteAccount(account.id);
+      message.success('账号删除成功');
+      fetchAccounts();
+      fetchStatistics();
+    } catch (error: any) {
+      message.error(error.response?.data?.message || '删除账号失败');
     }
   };
 
@@ -484,10 +423,14 @@ const AccountsManagement: React.FC = () => {
                 style={{ width: '100%' }}
                 value={filterRole}
                 onChange={setFilterRole}
+                loading={rolesLoading}
+                notFoundContent={rolesLoading ? '加载中...' : '暂无角色数据'}
               >
-                <Option value="ADMIN">管理员</Option>
-                <Option value="DOCTOR">医生</Option>
-                <Option value="NURSE">护士</Option>
+                {roles.map(role => (
+                  <Option key={role.id} value={role.code}>
+                    {role.name}
+                  </Option>
+                ))}
               </Select>
             </Col>
             <Col xs={12} sm={6} md={4}>
@@ -614,10 +557,16 @@ const AccountsManagement: React.FC = () => {
                   name="role"
                   rules={[{ required: true, message: '请选择角色' }]}
                 >
-                  <Select placeholder="请选择角色">
-                    <Option value="ADMIN">管理员</Option>
-                    <Option value="DOCTOR">医生</Option>
-                    <Option value="NURSE">护士</Option>
+                  <Select 
+                    placeholder="请选择角色" 
+                    loading={rolesLoading}
+                    notFoundContent={rolesLoading ? '加载中...' : '暂无角色数据'}
+                  >
+                    {roles.map(role => (
+                      <Option key={role.id} value={role.code}>
+                        {role.name}
+                      </Option>
+                    ))}
                   </Select>
                 </Form.Item>
               </Col>

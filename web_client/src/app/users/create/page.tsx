@@ -79,7 +79,7 @@ const CreateUserPage: React.FC = () => {
                 返回
               </Button>
               <Title level={2} style={{ margin: 0 }}>
-                新增用户
+                新增C端用户
               </Title>
             </Space>
           </Col>
@@ -94,7 +94,7 @@ const CreateUserPage: React.FC = () => {
                 onFinish={handleSubmit}
                 initialValues={{
                   status: 'ACTIVE',
-                  role: 'RECEPTIONIST',
+                  role: 'USER', // 默认为C端用户
                 }}
               >
                 <Form.Item
@@ -173,11 +173,9 @@ const CreateUserPage: React.FC = () => {
                   <Select
                     placeholder="请选择角色"
                     size="large"
+                    disabled // 禁用选择，固定为C端用户
                   >
-                    <Option value="ADMIN">管理员</Option>
-                    <Option value="DOCTOR">医生</Option>
-                    <Option value="NURSE">护士</Option>
-                    <Option value="RECEPTIONIST">前台</Option>
+                    <Option value="USER">C端用户</Option>
                   </Select>
                 </Form.Item>
 

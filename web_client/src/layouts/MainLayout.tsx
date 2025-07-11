@@ -77,6 +77,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           path: '/settings/permissions',
         },
         {
+          key: '/settings/accounts',
+          label: '后台账号管理',
+          path: '/settings/accounts',
+        },
+        {
           key: '/settings/parameters',
           label: '系统参数',
           path: '/settings/parameters',
@@ -167,6 +172,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           'settings': '系统设置',
           'personal': '个人设置',
           'permissions': '权限管理',
+          'accounts': '后台账号管理',
           'parameters': '参数配置',
           'dictionary': '字典管理',
           'notifications': '通知设置',

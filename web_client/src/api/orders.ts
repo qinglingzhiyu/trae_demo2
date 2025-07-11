@@ -25,11 +25,11 @@ export const ordersApi = {
 
   // 删除订单
   deleteOrder: async (id: number): Promise<void> => {
-    return apiClient.delete(`/orders/${id}`);
+    return apiClient.post(`/orders/${id}/delete`);
   },
 
   // 获取订单统计信息
   getOrderStats: async (): Promise<any> => {
-    return apiClient.get('/orders/stats');
+    return apiClient.get('/orders/statistics');
   },
 };

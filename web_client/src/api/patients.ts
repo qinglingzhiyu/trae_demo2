@@ -25,6 +25,6 @@ export const patientsApi = {
 
   // 删除就诊人
   deletePatient: async (id: number): Promise<void> => {
-    return apiClient.delete(`/patients/${id}`);
+    return apiClient.post(`/patients/${id}/delete`);
   },
 };
