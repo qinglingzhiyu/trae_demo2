@@ -134,7 +134,7 @@ export class NotificationsController {
     return this.notificationsService.findOne(id);
   }
 
-  @Patch(':id')
+  @Post(':id/update')
   @ApiOperation({ summary: '更新通知' })
   @ApiParam({ name: 'id', description: '通知ID', type: Number })
   @ApiResponse({ status: 200, description: '更新成功', type: NotificationEntity })
@@ -146,8 +146,8 @@ export class NotificationsController {
     return this.notificationsService.update(id, updateNotificationDto);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: '删除通知' })
+  @Post(':id/delete')
+  @ApiOperation({ summary: '软删除通知' })
   @ApiParam({ name: 'id', description: '通知ID', type: Number })
   @ApiResponse({ status: 200, description: '删除成功' })
   @ApiResponse({ status: 404, description: '通知不存在' })
@@ -156,16 +156,16 @@ export class NotificationsController {
     return this.notificationsService.remove(id);
   }
 
-  @Delete('batch/delete')
-  @ApiOperation({ summary: '批量删除通知' })
+  @Post('batch/delete')
+  @ApiOperation({ summary: '批量软删除通知' })
   @ApiResponse({ status: 200, description: '删除成功' })
   @HttpCode(HttpStatus.OK)
   async removeBatch(@Body('ids') ids: number[]): Promise<void> {
     return this.notificationsService.removeBatch(ids);
   }
 
-  @Delete('receiver/:receiverId')
-  @ApiOperation({ summary: '删除接收记录' })
+  @Post('receiver/:receiverId/delete')
+  @ApiOperation({ summary: '软删除接收记录' })
   @ApiParam({ name: 'receiverId', description: '接收记录ID', type: Number })
   @ApiResponse({ status: 200, description: '删除成功' })
   @HttpCode(HttpStatus.OK)

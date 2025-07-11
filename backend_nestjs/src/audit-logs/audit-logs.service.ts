@@ -20,7 +20,6 @@ export class AuditLogsService {
         user: {
           select: {
             id: true,
-            username: true,
             name: true,
             email: true,
           },
@@ -48,6 +47,7 @@ export class AuditLogsService {
     const skip = (page - 1) * limit;
 
     const where = {
+      deletedAt: null,
       ...(search && {
         OR: [
           { description: { contains: search, mode: 'insensitive' as const } },
@@ -82,7 +82,6 @@ export class AuditLogsService {
           user: {
             select: {
               id: true,
-              username: true,
               name: true,
               email: true,
             },
@@ -103,13 +102,12 @@ export class AuditLogsService {
   }
 
   async findOne(id: number) {
-    const auditLog = await this.prisma.auditLog.findUnique({
-      where: { id },
+    const auditLog = await this.prisma.auditLog.findFirst({
+      where: { id, deletedAt: null },
       include: {
         user: {
           select: {
             id: true,
-            username: true,
             name: true,
             email: true,
           },
@@ -133,16 +131,17 @@ export class AuditLogsService {
   }
 
   async getStats(startTime?: string, endTime?: string) {
-    const where = {
-      ...(startTime || endTime
-        ? {
-            createdAt: {
-              ...(startTime && { gte: new Date(startTime) }),
-              ...(endTime && { lte: new Date(endTime) }),
-            },
-          }
-        : {}),
-    };
+    // 构建简单的where条件
+    const where: any = { deletedAt: null };
+    if (startTime || endTime) {
+      where.createdAt = {};
+      if (startTime) {
+        where.createdAt.gte = new Date(startTime);
+      }
+      if (endTime) {
+        where.createdAt.lte = new Date(endTime);
+      }
+    }
 
     // 获取基础统计
     const [totalOperations, successOperations, failureOperations] = await Promise.all([
@@ -159,20 +158,20 @@ export class AuditLogsService {
 
     const [todayOperations, weekOperations, monthOperations] = await Promise.all([
       this.prisma.auditLog.count({
-        where: { createdAt: { gte: todayStart } },
+        where: { createdAt: { gte: todayStart }, deletedAt: null },
       }),
       this.prisma.auditLog.count({
-        where: { createdAt: { gte: weekStart } },
+        where: { createdAt: { gte: weekStart }, deletedAt: null },
       }),
       this.prisma.auditLog.count({
-        where: { createdAt: { gte: monthStart } },
+        where: { createdAt: { gte: monthStart }, deletedAt: null },
       }),
     ]);
 
     // 获取模块统计
     const moduleStats = await this.prisma.auditLog.groupBy({
       by: ['module'],
-      where,
+      where: { deletedAt: null },
       _count: { id: true },
       orderBy: { _count: { id: 'desc' } },
       take: 10,
@@ -181,7 +180,7 @@ export class AuditLogsService {
     // 获取动作统计
     const actionStats = await this.prisma.auditLog.groupBy({
       by: ['action'],
-      where,
+      where: { deletedAt: null },
       _count: { id: true },
       orderBy: { _count: { id: 'desc' } },
       take: 10,
@@ -190,25 +189,25 @@ export class AuditLogsService {
     // 获取用户统计
     const userStatsRaw = await this.prisma.auditLog.groupBy({
       by: ['userId'],
-      where,
+      where: { deletedAt: null },
       _count: { id: true },
       orderBy: { _count: { id: 'desc' } },
       take: 10,
     });
 
     // 获取用户信息
-    const userIds = userStatsRaw.map((stat) => stat.userId);
+    const userIds = userStatsRaw.map((stat) => Number(stat.userId));
     const users = await this.prisma.user.findMany({
       where: { id: { in: userIds } },
-      select: { id: true, username: true, name: true },
+      select: { id: true, name: true },
     });
 
     const userMap = new Map(users.map((user) => [user.id, user]));
     const userStats = userStatsRaw.map((stat) => {
-      const user = userMap.get(stat.userId);
+      const user = userMap.get(Number(stat.userId));
       return {
-        userId: stat.userId,
-        username: user?.username || '未知用户',
+        userId: Number(stat.userId),
+        username: user?.name || '未知用户',
         count: stat._count.id,
         percentage: totalOperations > 0 ? (stat._count.id / totalOperations) * 100 : 0,
       };
@@ -238,6 +237,7 @@ export class AuditLogsService {
   async getModules() {
     const modules = await this.prisma.auditLog.groupBy({
       by: ['module'],
+      where: { deletedAt: null },
       _count: { id: true },
       orderBy: { module: 'asc' },
     });
@@ -251,6 +251,7 @@ export class AuditLogsService {
   async getActions() {
     const actions = await this.prisma.auditLog.groupBy({
       by: ['action'],
+      where: { deletedAt: null },
       _count: { id: true },
       orderBy: { action: 'asc' },
     });
@@ -274,27 +275,29 @@ export class AuditLogsService {
 
   async remove(id: number) {
     const auditLog = await this.prisma.auditLog.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
     });
 
     if (!auditLog) {
       throw new NotFoundException('操作日志不存在');
     }
 
-    await this.prisma.auditLog.delete({
+    await this.prisma.auditLog.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
 
-    return { message: '删除成功' };
+    return { message: '软删除成功' };
   }
 
   async batchRemove(ids: number[]) {
-    const result = await this.prisma.auditLog.deleteMany({
-      where: { id: { in: ids } },
+    const result = await this.prisma.auditLog.updateMany({
+      where: { id: { in: ids }, deletedAt: null },
+      data: { deletedAt: new Date() },
     });
 
     return {
-      message: `批量删除成功，共删除 ${result.count} 条记录`,
+      message: `批量软删除成功，共删除 ${result.count} 条记录`,
       deletedCount: result.count,
     };
   }
@@ -303,16 +306,18 @@ export class AuditLogsService {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    const result = await this.prisma.auditLog.deleteMany({
+    const result = await this.prisma.auditLog.updateMany({
       where: {
         createdAt: {
           lt: cutoffDate,
         },
+        deletedAt: null,
       },
+      data: { deletedAt: new Date() },
     });
 
     return {
-      message: `清理完成，删除了 ${days} 天前的 ${result.count} 条日志记录`,
+      message: `清理完成，软删除了 ${days} 天前的 ${result.count} 条日志记录`,
       deletedCount: result.count,
       cutoffDate,
     };

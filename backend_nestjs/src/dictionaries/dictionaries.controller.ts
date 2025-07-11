@@ -59,7 +59,7 @@ export class DictionariesController {
     return this.dictionariesService.findOneDictionary(id);
   }
 
-  @Patch(':id')
+  @Post(':id/update')
   @ApiOperation({ summary: '更新字典类型' })
   @ApiResponse({ status: 200, description: '更新成功', type: DictionaryEntity })
   async updateDictionary(
@@ -69,8 +69,8 @@ export class DictionariesController {
     return this.dictionariesService.updateDictionary(id, updateDictionaryDto);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: '删除字典类型' })
+  @Post(':id/delete')
+  @ApiOperation({ summary: '软删除字典类型' })
   @ApiResponse({ status: 200, description: '删除成功' })
   async removeDictionary(@Param('id', ParseIntPipe) id: number) {
     return this.dictionariesService.removeDictionary(id);
@@ -105,7 +105,7 @@ export class DictionariesController {
     return this.dictionariesService.findOneDictionaryItem(id);
   }
 
-  @Patch('items/:id')
+  @Post('items/:id/update')
   @ApiOperation({ summary: '更新字典项' })
   @ApiResponse({ status: 200, description: '更新成功', type: DictionaryItemEntity })
   async updateDictionaryItem(
@@ -115,8 +115,8 @@ export class DictionariesController {
     return this.dictionariesService.updateDictionaryItem(id, updateDictionaryItemDto);
   }
 
-  @Delete('items/:id')
-  @ApiOperation({ summary: '删除字典项' })
+  @Post('items/:id/delete')
+  @ApiOperation({ summary: '软删除字典项' })
   @ApiResponse({ status: 200, description: '删除成功' })
   async removeDictionaryItem(@Param('id', ParseIntPipe) id: number) {
     return this.dictionariesService.removeDictionaryItem(id);

@@ -144,8 +144,11 @@ export class SystemParamsService {
 
     // 如果更新键名，检查是否重复
     if (updateSystemParamDto.key && updateSystemParamDto.key !== existingParam.key) {
-      const duplicateParam = await this.prisma.systemParam.findUnique({
-        where: { key: updateSystemParamDto.key },
+      const duplicateParam = await this.prisma.systemParam.findFirst({
+        where: { 
+          key: updateSystemParamDto.key,
+          deletedAt: null,
+        },
       });
 
       if (duplicateParam) {

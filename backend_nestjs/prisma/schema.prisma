@@ -267,6 +267,7 @@ model DictionaryType {
   code        String   @unique
   description String?
   status      String   @default("active") // active, inactive
+  deletedAt   DateTime? @map("deleted_at") // 软删除字段
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -286,6 +287,7 @@ model DictionaryItem {
   status      String   @default("active") // active, inactive
   description String?
   parentId    Int?     @map("parent_id")
+  deletedAt   DateTime? @map("deleted_at") // 软删除字段
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -315,6 +317,7 @@ model AuditLog {
   status       String   @default("success") // success, failed
   errorMessage String?  @map("error_message")
   duration     Int      @default(0) // 请求耗时(ms)
+  deletedAt    DateTime? @map("deleted_at") // 软删除字段
   createdAt    DateTime @default(now()) @map("created_at")
 
   @@map("audit_logs")
@@ -352,6 +355,7 @@ model NotificationRecord {
   sentAt        DateTime? @map("sent_at")
   readAt        DateTime? @map("read_at")
   errorMessage  String?  @map("error_message")
+  deletedAt     DateTime? @map("deleted_at") // 软删除字段
   createdAt     DateTime @default(now()) @map("created_at")
 
   // 关联关系

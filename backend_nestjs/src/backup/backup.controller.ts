@@ -11,6 +11,7 @@ import {
   HttpStatus,
   Res,
   StreamableFile,
+  Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -89,13 +90,16 @@ export class BackupController {
     return this.backupService.getAutoBackupConfig();
   }
 
-  @Delete('auto-config/:id')
+  @Post('auto-config/:id/delete')
   @ApiOperation({ summary: '删除自动备份配置' })
   @ApiParam({ name: 'id', description: '备份配置ID', type: Number })
   @ApiResponse({ status: 200, description: '删除成功' })
   @HttpCode(HttpStatus.OK)
-  async removeAutoBackupConfig(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.backupService.removeAutoBackupConfig(id);
+  async removeAutoBackupConfig(
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    return this.backupService.removeAutoBackupConfig(id, req.user.userId);
   }
 
   @Post('restore')
@@ -165,22 +169,28 @@ export class BackupController {
     return this.backupService.findOne(id);
   }
 
-  @Delete(':id')
+  @Post(':id/delete')
   @ApiOperation({ summary: '删除备份' })
   @ApiParam({ name: 'id', description: '备份ID', type: Number })
   @ApiResponse({ status: 200, description: '删除成功' })
   @ApiResponse({ status: 404, description: '备份不存在' })
   @HttpCode(HttpStatus.OK)
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.backupService.remove(id);
+  async remove(
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    return this.backupService.remove(id, req.user.userId);
   }
 
-  @Delete('batch/delete')
+  @Post('batch/delete')
   @ApiOperation({ summary: '批量删除备份' })
   @ApiResponse({ status: 200, description: '删除成功' })
   @HttpCode(HttpStatus.OK)
-  async removeBatch(@Body('ids') ids: number[]): Promise<void> {
-    return this.backupService.removeBatch(ids);
+  async removeBatch(
+    @Request() req,
+    @Body('ids') ids: number[],
+  ): Promise<void> {
+    return this.backupService.removeBatch(ids, req.user.userId);
   }
 
   @Post('stop/:id')

@@ -3,6 +3,7 @@ import { Response } from 'express';
 import { StreamableFile } from '@nestjs/common';
 import { createReadStream } from 'fs';
 import { join } from 'path';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateBackupDto } from './dto/create-backup.dto';
 import { RestoreBackupDto } from './dto/restore-backup.dto';
 import { QueryBackupDto } from './dto/query-backup.dto';
@@ -20,6 +21,11 @@ export class BackupService {
   private autoConfigs: BackupEntity[] = [];
   private nextId = 1;
   private nextRestoreId = 1;
+
+  constructor(private auditLogsService: AuditLogsService) {
+    // 初始化一些示例数据
+    this.initSampleData();
+  }
 
   // 备份类型常量
   private readonly BACKUP_TYPES = ['FULL', 'INCREMENTAL', 'DIFFERENTIAL'];
@@ -40,10 +46,7 @@ export class BackupService {
     'notifications',
   ];
 
-  constructor() {
-    // 初始化一些示例数据
-    this.initSampleData();
-  }
+
 
   /**
    * 创建备份
@@ -190,7 +193,7 @@ export class BackupService {
   /**
    * 删除备份
    */
-  async remove(id: number): Promise<void> {
+  async remove(id: number, userId?: number): Promise<void> {
     const backup = await this.findOne(id);
 
     // 如果备份正在进行中，不允许删除
@@ -207,6 +210,21 @@ export class BackupService {
       this.autoConfigs.splice(autoIndex, 1);
     }
 
+    // 记录审计日志
+    if (userId) {
+      await this.auditLogsService.log(
+        userId,
+        '数据备份恢复',
+        '删除备份',
+        `删除备份: ${backup.name}`,
+        {
+          targetType: 'backup',
+          targetId: id.toString(),
+          oldData: { backupId: id, backupName: backup.name, backupType: backup.type },
+        },
+      );
+    }
+
     // 这里应该删除实际的备份文件
     console.log(`删除备份文件: ${backup.filePath}`);
   }
@@ -214,13 +232,30 @@ export class BackupService {
   /**
    * 批量删除备份
    */
-  async removeBatch(ids: number[]): Promise<void> {
+  async removeBatch(ids: number[], userId?: number): Promise<void> {
+    const deletedBackups = [];
     for (const id of ids) {
       try {
-        await this.remove(id);
+        const backup = await this.findOne(id);
+        deletedBackups.push(backup.name);
+        await this.remove(id, userId);
       } catch (error) {
         console.error(`删除备份 ${id} 失败:`, error.message);
       }
+    }
+
+    // 记录批量删除的审计日志
+    if (userId && deletedBackups.length > 0) {
+      await this.auditLogsService.log(
+        userId,
+        '数据备份恢复',
+        '批量删除备份',
+        `批量删除 ${deletedBackups.length} 个备份`,
+        {
+          targetType: 'backup',
+          oldData: { deletedCount: deletedBackups.length, backupNames: deletedBackups },
+        },
+      );
     }
   }
 
@@ -299,7 +334,7 @@ export class BackupService {
   /**
    * 删除自动备份配置
    */
-  async removeAutoBackupConfig(id: number): Promise<void> {
+  async removeAutoBackupConfig(id: number, userId?: number): Promise<void> {
     const config = this.autoConfigs.find((c) => c.id === id);
     if (!config) {
       throw new NotFoundException(`自动备份配置 ID ${id} 不存在`);
@@ -307,6 +342,21 @@ export class BackupService {
 
     const index = this.autoConfigs.findIndex((c) => c.id === id);
     this.autoConfigs.splice(index, 1);
+
+    // 记录审计日志
+    if (userId) {
+      await this.auditLogsService.log(
+        userId,
+        '数据备份恢复',
+        '删除自动备份配置',
+        `删除自动备份配置: ${config.name}`,
+        {
+          targetType: 'backup_config',
+          targetId: id.toString(),
+          oldData: { configId: id, configName: config.name, cronExpression: config.cronExpression },
+        },
+      );
+    }
   }
 
   /**

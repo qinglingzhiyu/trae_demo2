@@ -103,22 +103,22 @@ export class AuditLogsController {
     return this.auditLogsService.findOne(id);
   }
 
-  @Delete('cleanup')
+  @Post('cleanup')
   @ApiOperation({ summary: '清理过期日志' })
   @ApiResponse({ status: 200, description: '清理成功' })
   async cleanup(@Query('days', ParseIntPipe) days: number = 90) {
     return this.auditLogsService.cleanup(days);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: '删除操作日志' })
+  @Post(':id/delete')
+  @ApiOperation({ summary: '软删除操作日志' })
   @ApiResponse({ status: 200, description: '删除成功' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.auditLogsService.remove(id);
   }
 
-  @Post('batch-delete')
-  @ApiOperation({ summary: '批量删除操作日志' })
+  @Post('batch/delete')
+  @ApiOperation({ summary: '批量软删除操作日志' })
   @ApiResponse({ status: 200, description: '删除成功' })
   async batchRemove(@Body() body: { ids: number[] }) {
     return this.auditLogsService.batchRemove(body.ids);

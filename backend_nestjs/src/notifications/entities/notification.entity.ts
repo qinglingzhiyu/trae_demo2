@@ -52,6 +52,9 @@ export class NotificationEntity {
   @ApiProperty({ description: '更新时间', example: '2023-12-01T10:00:00.000Z' })
   updatedAt: Date;
 
+  @ApiProperty({ description: '删除时间', example: '2023-12-01T11:00:00.000Z', required: false })
+  deletedAt?: Date;
+
   constructor(partial: Partial<NotificationEntity>) {
     Object.assign(this, partial);
   }

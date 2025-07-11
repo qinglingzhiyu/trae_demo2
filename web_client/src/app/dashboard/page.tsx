@@ -314,7 +314,7 @@ const DashboardPage: React.FC = () => {
     return (
       <MainLayout>
         <div className="flex justify-center items-center h-96">
-          <Spin size="large" tip="加载中..." />
+          <Spin size="large" />
         </div>
       </MainLayout>
     );

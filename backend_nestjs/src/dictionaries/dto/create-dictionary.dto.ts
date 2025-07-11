@@ -26,10 +26,10 @@ export class CreateDictionaryDto {
 }
 
 export class CreateDictionaryItemDto {
-  @ApiProperty({ description: '字典类型', example: 'gender' })
-  @IsString()
-  @Length(2, 50, { message: '字典类型长度必须在2-50个字符之间' })
-  type: string;
+  @ApiProperty({ description: '字典类型ID', example: 1 })
+  @IsInt()
+  @Min(1)
+  typeId: number;
 
   @ApiProperty({ description: '字典项标签', example: '男' })
   @IsString()

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { QueryRoleDto } from './dto/query-role.dto';
@@ -7,7 +8,10 @@ import { RoleEntity, PermissionEntity } from './entities/role.entity';
 
 @Injectable()
 export class PermissionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditLogsService: AuditLogsService,
+  ) {}
 
   // 角色管理
   async createRole(createRoleDto: CreateRoleDto) {
@@ -138,7 +142,7 @@ export class PermissionsService {
     return new RoleEntity(role);
   }
 
-  async removeRole(id: number) {
+  async removeRole(id: number, userId?: number) {
     // 检查角色是否存在
     const role = await this.prisma.role.findFirst({
       where: { id, deletedAt: null },
@@ -162,6 +166,21 @@ export class PermissionsService {
       where: { id },
       data: { deletedAt: new Date() },
     });
+
+    // 记录审计日志
+    if (userId) {
+      await this.auditLogsService.log(
+        userId,
+        '权限管理',
+        '删除角色',
+        `删除角色: ${role.name} (${role.code})`,
+        {
+          targetType: 'role',
+          targetId: id.toString(),
+          oldData: { roleId: id, roleName: role.name, roleCode: role.code },
+        },
+      );
+    }
 
     return { message: '删除成功' };
   }
@@ -259,7 +278,7 @@ export class PermissionsService {
     return new PermissionEntity(updatedPermission);
   }
 
-  async removePermission(id: number) {
+  async removePermission(id: number, userId?: number) {
     const permission = await this.prisma.permission.findFirst({
       where: { id, deletedAt: null },
     });
@@ -281,6 +300,21 @@ export class PermissionsService {
       where: { id },
       data: { deletedAt: new Date() },
     });
+
+    // 记录审计日志
+    if (userId) {
+      await this.auditLogsService.log(
+        userId,
+        '权限管理',
+        '删除权限',
+        `删除权限: ${permission.name} (${permission.code})`,
+        {
+          targetType: 'permission',
+          targetId: id.toString(),
+          oldData: { permissionId: id, permissionName: permission.name, permissionCode: permission.code },
+        },
+      );
+    }
 
     return { message: '删除成功' };
   }

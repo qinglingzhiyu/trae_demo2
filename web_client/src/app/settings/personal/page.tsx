@@ -30,11 +30,10 @@ import {
 import MainLayout from '../../../layouts/MainLayout';
 import type { UploadChangeParam } from 'antd/es/upload';
 import type { UploadFile } from 'antd/es/upload/interface';
-
+import dayjs from 'dayjs';
 
 const { Option } = Select;
 const { TextArea } = Input;
-const { TabPane } = Tabs;
 
 interface UserProfile {
   username: string;
@@ -116,9 +115,21 @@ const PersonalSettings: React.FC = () => {
   });
 
   React.useEffect(() => {
-    form.setFieldsValue(userProfile);
+    const profileData = {
+      ...userProfile,
+      birthday: userProfile.birthday ? dayjs(userProfile.birthday) : null
+    };
+    const notificationData = {
+      ...notificationSettings,
+      quietHours: {
+        ...notificationSettings.quietHours,
+        startTime: notificationSettings.quietHours.startTime ? dayjs(notificationSettings.quietHours.startTime, 'HH:mm') : null,
+        endTime: notificationSettings.quietHours.endTime ? dayjs(notificationSettings.quietHours.endTime, 'HH:mm') : null
+      }
+    };
+    form.setFieldsValue(profileData);
     securityForm.setFieldsValue(securitySettings);
-    notificationForm.setFieldsValue(notificationSettings);
+    notificationForm.setFieldsValue(notificationData);
   }, [form, securityForm, notificationForm, userProfile, securitySettings, notificationSettings]);
 
   const handleProfileSave = async (values: UserProfile) => {
@@ -189,18 +200,20 @@ const PersonalSettings: React.FC = () => {
         </div>
 
         <Card>
-          <Tabs activeKey={activeTab} onChange={setActiveTab}>
-            {/* 个人信息 */}
-            <TabPane
-              tab={<span><UserOutlined />个人信息</span>}
-              key="profile"
-            >
-              <Form
-                form={form}
-                layout="vertical"
-                onFinish={handleProfileSave}
-                style={{ maxWidth: '800px' }}
-              >
+          <Tabs 
+            activeKey={activeTab} 
+            onChange={setActiveTab}
+            items={[
+              {
+                key: 'profile',
+                label: <span><UserOutlined />个人信息</span>,
+                children: (
+                  <Form
+                    form={form}
+                    layout="vertical"
+                    onFinish={handleProfileSave}
+                    style={{ maxWidth: '800px' }}
+                  >
                 <div style={{ marginBottom: '24px', textAlign: 'center' }}>
                   <Avatar size={100} src={avatarUrl} icon={<UserOutlined />} />
                   <div style={{ marginTop: '16px' }}>
@@ -315,20 +328,19 @@ const PersonalSettings: React.FC = () => {
                     </Button>
                   </Space>
                 </div>
-              </Form>
-            </TabPane>
-
-            {/* 安全设置 */}
-            <TabPane
-              tab={<span><SecurityScanOutlined />安全设置</span>}
-              key="security"
-            >
-              <Form
-                form={securityForm}
-                layout="vertical"
-                onFinish={handleSecuritySave}
-                style={{ maxWidth: '600px' }}
-              >
+                  </Form>
+                )
+              },
+              {
+                key: 'security',
+                label: <span><SecurityScanOutlined />安全设置</span>,
+                children: (
+                  <Form
+                    form={securityForm}
+                    layout="vertical"
+                    onFinish={handleSecuritySave}
+                    style={{ maxWidth: '600px' }}
+                  >
                 <h3>修改密码</h3>
                 <Form.Item
                   name="currentPassword"
@@ -386,20 +398,19 @@ const PersonalSettings: React.FC = () => {
                     </Button>
                   </Space>
                 </div>
-              </Form>
-            </TabPane>
-
-            {/* 通知设置 */}
-            <TabPane
-              tab={<span><BellOutlined />通知设置</span>}
-              key="notification"
-            >
-              <Form
-                form={notificationForm}
-                layout="vertical"
-                onFinish={handleNotificationSave}
-                style={{ maxWidth: '600px' }}
-              >
+                  </Form>
+                )
+              },
+              {
+                key: 'notification',
+                label: <span><BellOutlined />通知设置</span>,
+                children: (
+                  <Form
+                    form={notificationForm}
+                    layout="vertical"
+                    onFinish={handleNotificationSave}
+                    style={{ maxWidth: '600px' }}
+                  >
                 <h3>通知方式</h3>
                 <Form.Item name="emailNotification" valuePropName="checked">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -481,9 +492,11 @@ const PersonalSettings: React.FC = () => {
                     </Button>
                   </Space>
                 </div>
-              </Form>
-            </TabPane>
-          </Tabs>
+                  </Form>
+                )
+              }
+            ]}
+          />
         </Card>
       </div>
     </MainLayout>

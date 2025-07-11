@@ -15,6 +15,7 @@ import {
 import {
   DictionaryEntity,
   DictionaryItemEntity,
+  DictionaryTypeEntity,
 } from './entities/dictionary.entity';
 
 @Injectable()
@@ -24,57 +25,55 @@ export class DictionariesService {
   // 字典类型管理
   async createDictionary(createDictionaryDto: CreateDictionaryDto) {
     // 检查字典类型是否已存在
-    const existingDictionary = await this.prisma.dictionary.findUnique({
-      where: { type: createDictionaryDto.type },
+    const existingDictionary = await this.prisma.dictionaryType.findFirst({
+      where: { code: createDictionaryDto.type },
     });
 
     if (existingDictionary) {
       throw new BadRequestException('字典类型已存在');
     }
 
-    const dictionary = await this.prisma.dictionary.create({
+    const dictionary = await this.prisma.dictionaryType.create({
       data: {
-        ...createDictionaryDto,
-        isActive: true,
-        sort: createDictionaryDto.sort || 0,
+        code: createDictionaryDto.type,
+        name: createDictionaryDto.name,
+        description: createDictionaryDto.description,
       },
     });
 
-    return new DictionaryEntity(dictionary);
+    return new DictionaryTypeEntity(dictionary);
   }
 
   async findAllDictionaries(query: QueryDictionaryDto) {
     const { page = 1, limit = 10, search } = query;
     const skip = (page - 1) * limit;
 
-    const where = {
-      deletedAt: null,
-      ...(search && {
-        OR: [
-          { type: { contains: search, mode: 'insensitive' as const } },
-          { name: { contains: search, mode: 'insensitive' as const } },
-          { description: { contains: search, mode: 'insensitive' as const } },
-        ],
-      }),
-    };
+    const where: any = { deletedAt: null };
+    if (search) {
+      where.OR = [
+        { code: { contains: search } },
+        { name: { contains: search } },
+      ];
+    }
 
     const [dictionaries, total] = await Promise.all([
-      this.prisma.dictionary.findMany({
+      this.prisma.dictionaryType.findMany({
         where,
         skip,
         take: limit,
         include: {
-          _count: {
-            select: { items: true },
+          items: {
+            where: { deletedAt: null },
+            orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
           },
         },
-        orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
+        orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.dictionary.count({ where }),
+      this.prisma.dictionaryType.count({ where }),
     ]);
 
     return {
-      data: dictionaries.map((dictionary) => new DictionaryEntity(dictionary)),
+      data: dictionaries.map((dict) => new DictionaryEntity(dict)),
       total,
       page,
       limit,
@@ -83,7 +82,7 @@ export class DictionariesService {
   }
 
   async findOneDictionary(id: number) {
-    const dictionary = await this.prisma.dictionary.findFirst({
+    const dictionary = await this.prisma.dictionaryType.findUnique({
       where: { id, deletedAt: null },
       include: {
         items: {
@@ -102,7 +101,7 @@ export class DictionariesService {
 
   async updateDictionary(id: number, updateDictionaryDto: UpdateDictionaryDto) {
     // 检查字典是否存在
-    const existingDictionary = await this.prisma.dictionary.findFirst({
+    const existingDictionary = await this.prisma.dictionaryType.findUnique({
       where: { id, deletedAt: null },
     });
 
@@ -111,9 +110,13 @@ export class DictionariesService {
     }
 
     // 如果更新类型，检查是否重复
-    if (updateDictionaryDto.type && updateDictionaryDto.type !== existingDictionary.type) {
-      const duplicateDictionary = await this.prisma.dictionary.findUnique({
-        where: { type: updateDictionaryDto.type },
+    if (updateDictionaryDto.type && updateDictionaryDto.type !== existingDictionary.code) {
+      const duplicateDictionary = await this.prisma.dictionaryType.findFirst({
+        where: {
+          code: updateDictionaryDto.type,
+          id: { not: id },
+          deletedAt: null,
+        },
       });
 
       if (duplicateDictionary) {
@@ -121,9 +124,21 @@ export class DictionariesService {
       }
     }
 
-    const dictionary = await this.prisma.dictionary.update({
+    const updateData: any = { ...updateDictionaryDto };
+    if (updateDictionaryDto.type) {
+      updateData.code = updateDictionaryDto.type;
+      delete updateData.type;
+    }
+
+    const dictionary = await this.prisma.dictionaryType.update({
       where: { id },
-      data: updateDictionaryDto,
+      data: updateData,
+      include: {
+        items: {
+          where: { deletedAt: null },
+          orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
+        },
+      },
     });
 
     return new DictionaryEntity(dictionary);
@@ -131,27 +146,23 @@ export class DictionariesService {
 
   async removeDictionary(id: number) {
     // 检查字典是否存在
-    const dictionary = await this.prisma.dictionary.findFirst({
+    const dictionary = await this.prisma.dictionaryType.findUnique({
       where: { id, deletedAt: null },
-      include: {
-        _count: {
-          select: { items: true },
-        },
-      },
     });
 
     if (!dictionary) {
       throw new NotFoundException('字典类型不存在');
     }
 
-    // 检查是否有字典项
-    if (dictionary._count.items > 0) {
-      throw new BadRequestException('该字典类型下还有字典项，无法删除');
-    }
-
-    // 软删除字典
-    await this.prisma.dictionary.update({
+    // 软删除字典类型
+    await this.prisma.dictionaryType.update({
       where: { id },
+      data: { deletedAt: new Date() },
+    });
+
+    // 同时软删除关联的字典项
+    await this.prisma.dictionaryItem.updateMany({
+      where: { typeId: id, deletedAt: null },
       data: { deletedAt: new Date() },
     });
 
@@ -161,20 +172,19 @@ export class DictionariesService {
   // 字典项管理
   async createDictionaryItem(createDictionaryItemDto: CreateDictionaryItemDto) {
     // 检查字典类型是否存在
-    const dictionary = await this.prisma.dictionary.findFirst({
-      where: { id: createDictionaryItemDto.dictionaryId, deletedAt: null },
+    const dictionaryType = await this.prisma.dictionaryType.findUnique({
+      where: { id: createDictionaryItemDto.typeId },
     });
 
-    if (!dictionary) {
+    if (!dictionaryType) {
       throw new NotFoundException('字典类型不存在');
     }
 
     // 检查值是否重复
     const existingItem = await this.prisma.dictionaryItem.findFirst({
       where: {
-        dictionaryId: createDictionaryItemDto.dictionaryId,
+        typeId: createDictionaryItemDto.typeId,
         value: createDictionaryItemDto.value,
-        deletedAt: null,
       },
     });
 
@@ -183,13 +193,9 @@ export class DictionariesService {
     }
 
     const dictionaryItem = await this.prisma.dictionaryItem.create({
-      data: {
-        ...createDictionaryItemDto,
-        isActive: true,
-        sort: createDictionaryItemDto.sort || 0,
-      },
+      data: createDictionaryItemDto,
       include: {
-        dictionary: true,
+        type: true,
       },
     });
 
@@ -197,17 +203,15 @@ export class DictionariesService {
   }
 
   async findAllDictionaryItems(query: QueryDictionaryItemDto) {
-    const { page = 1, limit = 10, search, dictionaryId } = query;
+    const { page = 1, limit = 10, search, typeId } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = {
-      deletedAt: null,
-    };
-    if (dictionaryId) where.dictionaryId = dictionaryId;
+    const where: any = { deletedAt: null };
+    if (typeId) where.typeId = typeId;
     if (search) {
       where.OR = [
-        { label: { contains: search, mode: 'insensitive' as const } },
-        { value: { contains: search, mode: 'insensitive' as const } },
+        { label: { contains: search } },
+        { value: { contains: search } },
       ];
     }
 
@@ -217,7 +221,7 @@ export class DictionariesService {
         skip,
         take: limit,
         include: {
-          dictionary: true,
+          type: true,
         },
         orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
       }),
@@ -233,18 +237,18 @@ export class DictionariesService {
     };
   }
 
-  async findDictionaryItemsByType(type: string) {
-    const dictionary = await this.prisma.dictionary.findFirst({
-      where: { type: type, deletedAt: null },
+  async findDictionaryItemsByType(typeCode: string) {
+    const dictionaryType = await this.prisma.dictionaryType.findFirst({
+      where: { code: typeCode, deletedAt: null },
     });
 
-    if (!dictionary) {
+    if (!dictionaryType) {
       return [];
     }
 
     const dictionaryItems = await this.prisma.dictionaryItem.findMany({
       where: {
-        dictionaryId: dictionary.id,
+        typeId: dictionaryType.id,
         deletedAt: null,
       },
       orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
@@ -257,11 +261,11 @@ export class DictionariesService {
     const dictionaryItem = await this.prisma.dictionaryItem.findFirst({
       where: { id, deletedAt: null },
       include: {
-        dictionary: true,
+        type: true,
       },
     });
 
-    if (!dictionaryItem) {
+    if (!dictionaryItem || dictionaryItem.type?.deletedAt) {
       throw new NotFoundException('字典项不存在');
     }
 
@@ -270,7 +274,7 @@ export class DictionariesService {
 
   async updateDictionaryItem(id: number, updateDictionaryItemDto: UpdateDictionaryItemDto) {
     // 检查字典项是否存在
-    const existingItem = await this.prisma.dictionaryItem.findFirst({
+    const existingItem = await this.prisma.dictionaryItem.findUnique({
       where: { id, deletedAt: null },
     });
 
@@ -282,10 +286,10 @@ export class DictionariesService {
     if (updateDictionaryItemDto.value && updateDictionaryItemDto.value !== existingItem.value) {
       const duplicateItem = await this.prisma.dictionaryItem.findFirst({
         where: {
-          dictionaryId: existingItem.dictionaryId,
+          typeId: existingItem.typeId,
           value: updateDictionaryItemDto.value,
-          deletedAt: null,
           id: { not: id },
+          deletedAt: null,
         },
       });
 
@@ -298,7 +302,7 @@ export class DictionariesService {
       where: { id },
       data: updateDictionaryItemDto,
       include: {
-        dictionary: true,
+        type: true,
       },
     });
 
@@ -307,7 +311,7 @@ export class DictionariesService {
 
   async removeDictionaryItem(id: number) {
     // 检查字典项是否存在
-    const dictionaryItem = await this.prisma.dictionaryItem.findFirst({
+    const dictionaryItem = await this.prisma.dictionaryItem.findUnique({
       where: { id, deletedAt: null },
     });
 
@@ -326,12 +330,12 @@ export class DictionariesService {
 
   async batchCreateDictionaryItems(items: CreateDictionaryItemDto[]) {
     // 验证字典类型是否存在
-    const dictionaryIds = [...new Set(items.map(item => item.dictionaryId))];
-    const existingDictionaries = await this.prisma.dictionary.findMany({
-      where: { id: { in: dictionaryIds }, deletedAt: null },
+    const typeIds = [...new Set(items.map(item => item.typeId))];
+    const existingTypes = await this.prisma.dictionaryType.findMany({
+      where: { id: { in: typeIds } },
     });
 
-    if (existingDictionaries.length !== dictionaryIds.length) {
+    if (existingTypes.length !== typeIds.length) {
       throw new BadRequestException('部分字典类型不存在');
     }
 
@@ -339,9 +343,8 @@ export class DictionariesService {
     for (const item of items) {
       const existingItem = await this.prisma.dictionaryItem.findFirst({
         where: {
-          dictionaryId: item.dictionaryId,
+          typeId: item.typeId,
           value: item.value,
-          deletedAt: null,
         },
       });
 
@@ -358,55 +361,55 @@ export class DictionariesService {
   }
 
   async getAllDictionaryTypes() {
-    const dictionaries = await this.prisma.dictionary.findMany({
-      where: { deletedAt: null },
+    const types = await this.prisma.dictionaryType.findMany({
       select: {
         id: true,
-        type: true,
         name: true,
+        code: true,
         description: true,
       },
-      orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
+      orderBy: { name: 'asc' },
     });
 
-    return dictionaries;
+    return types;
   }
 
-  async exportDictionary(type: string) {
-    const dictionary = await this.prisma.dictionary.findFirst({
-      where: { type: type, deletedAt: null },
+  async exportDictionary(typeCode: string) {
+    const dictionaryType = await this.prisma.dictionaryType.findFirst({
+      where: { code: typeCode },
     });
 
-    if (!dictionary) {
+    if (!dictionaryType) {
       throw new NotFoundException('字典类型不存在');
     }
 
     const items = await this.prisma.dictionaryItem.findMany({
-      where: { dictionaryId: dictionary.id, deletedAt: null },
+      where: {
+        typeId: dictionaryType.id,
+      },
       orderBy: [{ sort: 'asc' }, { createdAt: 'desc' }],
     });
 
     return {
-      dictionary: new DictionaryEntity(dictionary),
+      dictionaryType: new DictionaryTypeEntity(dictionaryType),
       items: items.map((item) => new DictionaryItemEntity(item)),
     };
   }
 
   // 便捷方法：根据类型和值获取字典项标签
-  async getDictionaryLabel(type: string, value: string): Promise<string> {
-    const dictionary = await this.prisma.dictionary.findFirst({
-      where: { type: type, deletedAt: null },
+  async getDictionaryLabel(typeCode: string, value: string): Promise<string> {
+    const dictionaryType = await this.prisma.dictionaryType.findFirst({
+      where: { code: typeCode },
     });
 
-    if (!dictionary) {
+    if (!dictionaryType) {
       return value;
     }
 
     const item = await this.prisma.dictionaryItem.findFirst({
       where: {
-        dictionaryId: dictionary.id,
+        typeId: dictionaryType.id,
         value,
-        deletedAt: null,
       },
     });
 
@@ -414,20 +417,19 @@ export class DictionariesService {
   }
 
   // 便捷方法：根据类型和标签获取字典项值
-  async getDictionaryValue(type: string, label: string): Promise<string> {
-    const dictionary = await this.prisma.dictionary.findFirst({
-      where: { type: type, deletedAt: null },
+  async getDictionaryValue(typeCode: string, label: string): Promise<string> {
+    const dictionaryType = await this.prisma.dictionaryType.findFirst({
+      where: { code: typeCode },
     });
 
-    if (!dictionary) {
+    if (!dictionaryType) {
       return label;
     }
 
     const item = await this.prisma.dictionaryItem.findFirst({
       where: {
-        dictionaryId: dictionary.id,
+        typeId: dictionaryType.id,
         label,
-        deletedAt: null,
       },
     });
 

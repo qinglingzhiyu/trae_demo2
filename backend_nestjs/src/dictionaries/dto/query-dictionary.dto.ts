@@ -43,8 +43,10 @@ export class QueryDictionaryItemDto {
   @IsString()
   search?: string;
 
-  @ApiProperty({ description: '字典类型', example: 'gender', required: false })
+  @ApiProperty({ description: '字典类型ID', example: 1, required: false })
   @IsOptional()
-  @IsString()
-  type?: string;
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  typeId?: number;
 }

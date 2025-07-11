@@ -60,7 +60,7 @@ export class SystemParamsController {
     return this.systemParamsService.findOne(id);
   }
 
-  @Patch(':id')
+  @Post(':id/update')
   @ApiOperation({ summary: '更新系统参数' })
   @ApiResponse({ status: 200, description: '更新成功', type: SystemParamEntity })
   async update(
@@ -70,8 +70,8 @@ export class SystemParamsController {
     return this.systemParamsService.update(id, updateSystemParamDto);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: '删除系统参数' })
+  @Post(':id/delete')
+  @ApiOperation({ summary: '软删除系统参数' })
   @ApiResponse({ status: 200, description: '删除成功' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.systemParamsService.remove(id);

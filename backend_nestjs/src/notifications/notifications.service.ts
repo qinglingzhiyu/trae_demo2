@@ -68,7 +68,7 @@ export class NotificationsService {
    * 获取通知列表
    */
   async findAll(query: QueryNotificationDto) {
-    let filteredNotifications = [...this.notifications];
+    let filteredNotifications = this.notifications.filter(n => !n.deletedAt);
 
     // 搜索过滤
     if (query.search) {
@@ -153,7 +153,7 @@ export class NotificationsService {
    * 获取通知详情
    */
   async findOne(id: number): Promise<NotificationEntity> {
-    const notification = this.notifications.find((n) => n.id === id);
+    const notification = this.notifications.find((n) => n.id === id && !n.deletedAt);
     if (!notification) {
       throw new NotFoundException(`通知 ID ${id} 不存在`);
     }
@@ -195,11 +195,18 @@ export class NotificationsService {
       throw new BadRequestException('已发送的通知不能删除');
     }
 
-    const index = this.notifications.findIndex((n) => n.id === id);
-    this.notifications.splice(index, 1);
+    // 软删除通知
+    notification.deletedAt = new Date();
+    notification.updatedAt = new Date();
 
-    // 同时删除相关的接收记录
-    this.receivers = this.receivers.filter((r) => r.notificationId !== id);
+    // 同时软删除相关的接收记录
+    this.receivers
+      .filter((r) => r.notificationId === id)
+      .forEach((r) => {
+        r.isDeleted = true;
+        r.deletedAt = new Date();
+        r.updatedAt = new Date();
+      });
   }
 
   /**

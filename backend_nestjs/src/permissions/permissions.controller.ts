@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
+  Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PermissionsService } from './permissions.service';
@@ -57,11 +58,14 @@ export class PermissionsController {
     return this.permissionsService.updateRole(id, updateRoleDto);
   }
 
-  @Delete('roles/:id')
+  @Post('roles/:id/delete')
   @ApiOperation({ summary: '删除角色' })
   @ApiResponse({ status: 200, description: '删除成功' })
-  async removeRole(@Param('id', ParseIntPipe) id: number) {
-    return this.permissionsService.removeRole(id);
+  async removeRole(
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.permissionsService.removeRole(id, req.user.userId);
   }
 
   @Post('roles/:id/permissions')
@@ -106,10 +110,13 @@ export class PermissionsController {
     return this.permissionsService.updatePermission(id, updatePermissionDto);
   }
 
-  @Delete('permissions/:id')
+  @Post('permissions/:id/delete')
   @ApiOperation({ summary: '删除权限' })
   @ApiResponse({ status: 200, description: '删除成功' })
-  async removePermission(@Param('id', ParseIntPipe) id: number) {
-    return this.permissionsService.removePermission(id);
+  async removePermission(
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.permissionsService.removePermission(id, req.user.userId);
   }
 }
