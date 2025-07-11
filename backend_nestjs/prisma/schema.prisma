@@ -20,6 +20,14 @@ model User {
   password  String
   role     String     @default("USER")
   status   String     @default("ACTIVE")
+  department String?  // 所属部门
+  position   String?  // 职位
+  employeeId String?  @map("employee_id") // 工号
+  address    String?  // 联系地址
+  remark     String?  // 备注信息
+  lastLoginAt DateTime? @map("last_login_at") // 最后登录时间
+  lastLoginIp String?   @map("last_login_ip") // 最后登录IP
+  createdBy Int?     @map("created_by") // 创建者ID
   updatedBy Int?     @map("updated_by") // 更新者ID
   deletedAt DateTime? @map("deleted_at") // 软删除字段
   createdAt DateTime @default(now()) @map("created_at")
@@ -31,7 +39,9 @@ model User {
   createdOrders   Order[]   @relation("OrderCreatedBy")
   updatedOrders   Order[]   @relation("OrderUpdatedBy")
   updatedPatients Patient[] @relation("PatientUpdatedBy")
+  createdUsers    User[]    @relation("UserCreatedBy")
   updatedUsers    User[]    @relation("UserUpdatedBy")
+  creator         User?     @relation("UserCreatedBy", fields: [createdBy], references: [id])
   updater         User?     @relation("UserUpdatedBy", fields: [updatedBy], references: [id])
   userRoles       UserRole[]
 

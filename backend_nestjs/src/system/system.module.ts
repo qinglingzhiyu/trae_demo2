@@ -5,6 +5,7 @@ import { DictionariesModule } from '../dictionaries/dictionaries.module';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { BackupModule } from '../backup/backup.module';
+import { AccountsModule } from '../accounts/accounts.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { BackupModule } from '../backup/backup.module';
     AuditLogsModule,
     NotificationsModule,
     BackupModule,
+    AccountsModule,
   ],
   exports: [
     PermissionsModule,
@@ -22,6 +24,7 @@ import { BackupModule } from '../backup/backup.module';
     AuditLogsModule,
     NotificationsModule,
     BackupModule,
+    AccountsModule,
   ],
 })
 export class SystemModule {}

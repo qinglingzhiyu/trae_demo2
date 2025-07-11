@@ -12,11 +12,13 @@
     "@ant-design/icons": "^6.0.0",
     "@ant-design/nextjs-registry": "^1.0.2",
     "@ant-design/plots": "^2.6.0",
+    "@types/nprogress": "^0.2.3",
     "antd": "^5.26.4",
     "axios": "^1.10.0",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "next": "15.3.5",
+    "nprogress": "^0.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

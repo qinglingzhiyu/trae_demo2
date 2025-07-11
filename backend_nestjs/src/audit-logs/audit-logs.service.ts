@@ -11,19 +11,21 @@ export class AuditLogsService {
   async create(createAuditLogDto: CreateAuditLogDto) {
     const auditLog = await this.prisma.auditLog.create({
       data: {
-        ...createAuditLogDto,
-        result: createAuditLogDto.result || 'SUCCESS',
-        oldData: createAuditLogDto.oldData || {},
-        newData: createAuditLogDto.newData || {},
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+        userId: createAuditLogDto.userId.toString(),
+        username: '',
+        userRealName: '',
+        action: createAuditLogDto.action,
+        resource: createAuditLogDto.module,
+        resourceId: createAuditLogDto.targetId,
+        method: 'POST',
+        path: '',
+        ip: createAuditLogDto.ipAddress || '',
+        userAgent: createAuditLogDto.userAgent || '',
+        requestData: createAuditLogDto.oldData ? JSON.stringify(createAuditLogDto.oldData) : null,
+        responseData: createAuditLogDto.newData ? JSON.stringify(createAuditLogDto.newData) : null,
+        status: createAuditLogDto.result?.toLowerCase() || 'success',
+        errorMessage: createAuditLogDto.errorMessage,
+        duration: 0,
       },
     });
 
@@ -38,11 +40,10 @@ export class AuditLogsService {
       userId,
       module,
       action,
-      targetType,
-      result,
+      resource,
+      resourceId,
       startTime,
       endTime,
-      ipAddress,
     } = query;
     const skip = (page - 1) * limit;
 
@@ -50,19 +51,18 @@ export class AuditLogsService {
       deletedAt: null,
       ...(search && {
         OR: [
-          { description: { contains: search, mode: 'insensitive' as const } },
-          { module: { contains: search, mode: 'insensitive' as const } },
+          { username: { contains: search, mode: 'insensitive' as const } },
+          { userRealName: { contains: search, mode: 'insensitive' as const } },
+          { resource: { contains: search, mode: 'insensitive' as const } },
           { action: { contains: search, mode: 'insensitive' as const } },
-          { targetType: { contains: search, mode: 'insensitive' as const } },
-          { targetId: { contains: search, mode: 'insensitive' as const } },
+          { resourceId: { contains: search, mode: 'insensitive' as const } },
         ],
       }),
       ...(userId && { userId }),
-      ...(module && { module }),
+      ...(module && { resource: module }),
+      ...(resource && { resource }),
+      ...(resourceId && { resourceId }),
       ...(action && { action }),
-      ...(targetType && { targetType }),
-      ...(result && { result }),
-      ...(ipAddress && { ipAddress }),
       ...(startTime || endTime
         ? {
             createdAt: {
@@ -78,15 +78,6 @@ export class AuditLogsService {
         where,
         skip,
         take: limit,
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.auditLog.count({ where }),
@@ -104,15 +95,7 @@ export class AuditLogsService {
   async findOne(id: number) {
     const auditLog = await this.prisma.auditLog.findFirst({
       where: { id, deletedAt: null },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
+
     });
 
     if (!auditLog) {
@@ -123,11 +106,11 @@ export class AuditLogsService {
   }
 
   async findByUser(userId: number, query: QueryAuditLogDto) {
-    return this.findAll({ ...query, userId });
+    return this.findAll({ ...query, userId: userId.toString() });
   }
 
   async findByTarget(targetType: string, targetId: string, query: QueryAuditLogDto) {
-    return this.findAll({ ...query, targetType });
+    return this.findAll({ ...query, resourceId: targetId });
   }
 
   async getStats(startTime?: string, endTime?: string) {
@@ -170,7 +153,7 @@ export class AuditLogsService {
 
     // 获取模块统计
     const moduleStats = await this.prisma.auditLog.groupBy({
-      by: ['module'],
+      by: ['resource'],
       where: { deletedAt: null },
       _count: { id: true },
       orderBy: { _count: { id: 'desc' } },
@@ -221,7 +204,7 @@ export class AuditLogsService {
       weekOperations,
       monthOperations,
       moduleStats: moduleStats.map((stat) => ({
-        module: stat.module,
+        module: stat.resource,
         count: stat._count.id,
         percentage: totalOperations > 0 ? (stat._count.id / totalOperations) * 100 : 0,
       })),
@@ -230,20 +213,23 @@ export class AuditLogsService {
         count: stat._count.id,
         percentage: totalOperations > 0 ? (stat._count.id / totalOperations) * 100 : 0,
       })),
-      userStats,
+      userStats: userStats.map(stat => ({
+        ...stat,
+        userId: stat.userId.toString()
+      })),
     });
   }
 
   async getModules() {
     const modules = await this.prisma.auditLog.groupBy({
-      by: ['module'],
+      by: ['resource'],
       where: { deletedAt: null },
       _count: { id: true },
-      orderBy: { module: 'asc' },
+      orderBy: { resource: 'asc' },
     });
 
     return modules.map((module) => ({
-      name: module.module,
+      name: module.resource,
       count: module._count.id,
     }));
   }
@@ -345,7 +331,6 @@ export class AuditLogsService {
       module,
       action,
       description,
-      targetType: options?.targetType,
       targetId: options?.targetId,
       oldData: options?.oldData,
       newData: options?.newData,

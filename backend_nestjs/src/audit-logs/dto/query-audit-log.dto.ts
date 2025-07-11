@@ -22,11 +22,10 @@ export class QueryAuditLogDto {
   @IsString()
   search?: string;
 
-  @ApiProperty({ description: '操作用户ID', example: 1, required: false })
+  @ApiProperty({ description: '操作用户ID', example: '1', required: false })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  userId?: number;
+  @IsString()
+  userId?: string;
 
   @ApiProperty({ description: '操作模块', example: 'USER', required: false })
   @IsOptional()
@@ -38,15 +37,17 @@ export class QueryAuditLogDto {
   @IsString()
   action?: string;
 
-  @ApiProperty({ description: '目标资源类型', example: 'User', required: false })
+  @ApiProperty({ description: '资源类型', example: 'USER', required: false })
   @IsOptional()
   @IsString()
-  targetType?: string;
+  resource?: string;
 
-  @ApiProperty({ description: '操作结果', example: 'SUCCESS', required: false })
+  @ApiProperty({ description: '资源ID', example: '123', required: false })
   @IsOptional()
   @IsString()
-  result?: string;
+  resourceId?: string;
+
+
 
   @ApiProperty({ description: '开始时间', example: '2023-01-01T00:00:00.000Z', required: false })
   @IsOptional()

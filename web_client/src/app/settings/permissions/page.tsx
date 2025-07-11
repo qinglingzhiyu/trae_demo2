@@ -16,10 +16,8 @@ import {
   Tag,
   Tabs,
   Tree,
-  Checkbox,
   Row,
   Col,
-  Divider,
   InputNumber,
   Typography,
 } from 'antd';
@@ -27,13 +25,14 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  SearchOutlined,
-  ReloadOutlined,
-  UserOutlined,
   SafetyOutlined,
   SettingOutlined,
+  UserOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import MainLayout from '../../../layouts/MainLayout';
+import { permissionAPI } from '@/services/api';
+import type { Role, Permission, UserRoleAssignment } from '@/types';
 import type { ColumnsType } from 'antd/es/table';
 import type { DataNode } from 'antd/es/tree';
 
@@ -43,58 +42,18 @@ const { Search } = Input;
 const { TabPane } = Tabs;
 const { Text } = Typography;
 
-interface Role {
-  id: string;
-  name: string;
-  code: string;
-  description: string;
-  enabled: boolean;
-  isSystem: boolean;
-  sort: number;
-  userCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Permission {
-  id: string;
-  name: string;
-  code: string;
-  type: 'menu' | 'button' | 'api';
-  parentId?: string;
-  path?: string;
-  icon?: string;
-  sort: number;
-  enabled: boolean;
-  children?: Permission[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface UserRole {
-  id: string;
-  username: string;
-  realName: string;
-  email: string;
-  phone: string;
-  status: 'active' | 'inactive' | 'locked';
-  roles: Role[];
-  lastLoginAt: string;
-  createdAt: string;
-}
-
 const PermissionsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('roles');
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
-  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
+  const [userRoles, setUserRoles] = useState<UserRoleAssignment[]>([]);
   const [loading, setLoading] = useState(false);
   const [roleModalVisible, setRoleModalVisible] = useState(false);
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [userRoleModalVisible, setUserRoleModalVisible] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [editingPermission, setEditingPermission] = useState<Permission | null>(null);
-  const [editingUserRole, setEditingUserRole] = useState<UserRole | null>(null);
+  const [editingUserRole, setEditingUserRole] = useState<UserRoleAssignment | null>(null);
   const [roleForm] = Form.useForm();
   const [permissionForm] = Form.useForm();
   const [userRoleForm] = Form.useForm();
@@ -116,328 +75,38 @@ const PermissionsPage: React.FC = () => {
     return buildTree(permissions);
   };
 
+  // 加载角色数据
+  const loadRoles = async () => {
+    try {
+      setLoading(true);
+      const response = await permissionAPI.getRoles();
+      setRoles(response.data?.items || []);
+    } catch (error) {
+      console.error('加载角色数据失败:', error);
+      message.error('加载角色数据失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 加载权限数据
+  const loadPermissions = async () => {
+    try {
+      const response = await permissionAPI.getPermissionTree();
+      setPermissions(response.data || []);
+    } catch (error) {
+      console.error('加载权限数据失败:', error);
+      message.error('加载权限数据失败');
+    }
+  };
+
   // 初始化数据
   useEffect(() => {
-    // 模拟角色数据
-    setRoles([
-      {
-        id: '1',
-        name: '超级管理员',
-        code: 'super_admin',
-        description: '拥有系统所有权限的超级管理员角色',
-        enabled: true,
-        isSystem: true,
-        sort: 1,
-        userCount: 2,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '2',
-        name: '系统管理员',
-        code: 'admin',
-        description: '系统管理员，拥有大部分管理权限',
-        enabled: true,
-        isSystem: false,
-        sort: 2,
-        userCount: 5,
-        createdAt: '2024-01-02 10:00:00',
-        updatedAt: '2024-01-02 10:00:00',
-      },
-      {
-        id: '3',
-        name: '业务管理员',
-        code: 'business_admin',
-        description: '负责业务相关的管理工作',
-        enabled: true,
-        isSystem: false,
-        sort: 3,
-        userCount: 8,
-        createdAt: '2024-01-03 10:00:00',
-        updatedAt: '2024-01-03 10:00:00',
-      },
-      {
-        id: '4',
-        name: '普通用户',
-        code: 'user',
-        description: '普通用户角色，只有基础查看权限',
-        enabled: true,
-        isSystem: false,
-        sort: 4,
-        userCount: 20,
-        createdAt: '2024-01-04 10:00:00',
-        updatedAt: '2024-01-04 10:00:00',
-      },
-    ]);
+    loadRoles();
+    loadPermissions();
 
-    // 模拟权限数据
-    setPermissions([
-      // 一级菜单
-      {
-        id: '1',
-        name: '工作台',
-        code: 'dashboard',
-        type: 'menu',
-        path: '/dashboard',
-        icon: 'DashboardOutlined',
-        sort: 1,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '2',
-        name: '用户管理',
-        code: 'users',
-        type: 'menu',
-        path: '/users',
-        icon: 'UserOutlined',
-        sort: 2,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '3',
-        name: '就诊人管理',
-        code: 'patients',
-        type: 'menu',
-        path: '/patients',
-        icon: 'TeamOutlined',
-        sort: 3,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '4',
-        name: '订单管理',
-        code: 'orders',
-        type: 'menu',
-        path: '/orders',
-        icon: 'ShoppingOutlined',
-        sort: 4,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '5',
-        name: '数据分析',
-        code: 'analytics',
-        type: 'menu',
-        path: '/analytics',
-        icon: 'BarChartOutlined',
-        sort: 5,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '6',
-        name: '系统设置',
-        code: 'settings',
-        type: 'menu',
-        path: '/settings',
-        icon: 'SettingOutlined',
-        sort: 6,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      // 二级菜单和按钮权限
-      {
-        id: '7',
-        name: '查看工作台',
-        code: 'dashboard:view',
-        type: 'button',
-        parentId: '1',
-        sort: 1,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '8',
-        name: '查看用户',
-        code: 'users:view',
-        type: 'button',
-        parentId: '2',
-        sort: 1,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '9',
-        name: '创建用户',
-        code: 'users:create',
-        type: 'button',
-        parentId: '2',
-        sort: 2,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '10',
-        name: '编辑用户',
-        code: 'users:edit',
-        type: 'button',
-        parentId: '2',
-        sort: 3,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '11',
-        name: '删除用户',
-        code: 'users:delete',
-        type: 'button',
-        parentId: '2',
-        sort: 4,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '12',
-        name: '权限管理',
-        code: 'settings:permissions',
-        type: 'menu',
-        parentId: '6',
-        path: '/settings/permissions',
-        sort: 1,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '13',
-        name: '系统参数',
-        code: 'settings:parameters',
-        type: 'menu',
-        parentId: '6',
-        path: '/settings/parameters',
-        sort: 2,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '14',
-        name: '字典管理',
-        code: 'settings:dictionary',
-        type: 'menu',
-        parentId: '6',
-        path: '/settings/dictionary',
-        sort: 3,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '15',
-        name: '操作日志',
-        code: 'settings:audit-logs',
-        type: 'menu',
-        parentId: '6',
-        path: '/settings/audit-logs',
-        sort: 4,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '16',
-        name: '消息通知',
-        code: 'settings:notifications',
-        type: 'menu',
-        parentId: '6',
-        path: '/settings/notifications',
-        sort: 5,
-        enabled: true,
-        createdAt: '2024-01-01 10:00:00',
-        updatedAt: '2024-01-01 10:00:00',
-      },
-    ]);
-
-    // 模拟用户角色数据
-    setUserRoles([
-      {
-        id: '1',
-        username: 'admin',
-        realName: '系统管理员',
-        email: 'admin@example.com',
-        phone: '13800138000',
-        status: 'active',
-        roles: [
-          {
-            id: '1',
-            name: '超级管理员',
-            code: 'super_admin',
-            description: '拥有系统所有权限的超级管理员角色',
-            enabled: true,
-            isSystem: true,
-            sort: 1,
-            userCount: 2,
-            createdAt: '2024-01-01 10:00:00',
-            updatedAt: '2024-01-01 10:00:00',
-          },
-        ],
-        lastLoginAt: '2024-01-15 10:30:00',
-        createdAt: '2024-01-01 10:00:00',
-      },
-      {
-        id: '2',
-        username: 'manager',
-        realName: '业务经理',
-        email: 'manager@example.com',
-        phone: '13800138001',
-        status: 'active',
-        roles: [
-          {
-            id: '2',
-            name: '系统管理员',
-            code: 'admin',
-            description: '系统管理员，拥有大部分管理权限',
-            enabled: true,
-            isSystem: false,
-            sort: 2,
-            userCount: 5,
-            createdAt: '2024-01-02 10:00:00',
-            updatedAt: '2024-01-02 10:00:00',
-          },
-        ],
-        lastLoginAt: '2024-01-15 09:15:00',
-        createdAt: '2024-01-02 10:00:00',
-      },
-      {
-        id: '3',
-        username: 'service1',
-        realName: '客服专员',
-        email: 'service1@example.com',
-        phone: '13800138002',
-        status: 'active',
-        roles: [
-          {
-            id: '3',
-            name: '业务管理员',
-            code: 'business_admin',
-            description: '负责业务相关的管理工作',
-            enabled: true,
-            isSystem: false,
-            sort: 3,
-            userCount: 8,
-            createdAt: '2024-01-03 10:00:00',
-            updatedAt: '2024-01-03 10:00:00',
-          },
-        ],
-        lastLoginAt: '2024-01-15 08:45:00',
-        createdAt: '2024-01-03 10:00:00',
-      },
-    ]);
+    // 模拟用户角色数据（暂时保留，后续可通过用户API获取）
+    setUserRoles([]);
   }, []);
 
   // 角色表格列配置
@@ -623,7 +292,7 @@ const PermissionsPage: React.FC = () => {
           <Popconfirm
             title="确定要删除这个权限吗？"
             description="删除后不可恢复，请谨慎操作！"
-            onConfirm={() => handleDeletePermission(record.id)}
+            onConfirm={() => handleDeletePermission()}
             okText="确定"
             cancelText="取消"
           >
@@ -642,7 +311,7 @@ const PermissionsPage: React.FC = () => {
   ];
 
   // 用户角色表格列配置
-  const userRoleColumns: ColumnsType<UserRole> = [
+  const userRoleColumns: ColumnsType<UserRoleAssignment> = [
     {
       title: '用户名',
       dataIndex: 'username',
@@ -722,7 +391,7 @@ const PermissionsPage: React.FC = () => {
           <Popconfirm
             title="确定要删除这个用户的角色分配吗？"
             description="删除后用户将失去所有权限！"
-            onConfirm={() => handleDeleteUserRole(record.id)}
+            onConfirm={() => handleDeleteUserRole()}
             okText="确定"
             cancelText="取消"
           >
@@ -756,64 +425,95 @@ const PermissionsPage: React.FC = () => {
     setRoleModalVisible(true);
   };
 
-  const handleDeleteRole = (id: string) => {
-    setRoles(roles.filter((role) => role.id !== id));
-    message.success('角色删除成功');
+  const handleDeleteRole = async (id: string) => {
+    try {
+      setLoading(true);
+      await permissionAPI.deleteRole(Number(id));
+      await loadRoles(); // 重新加载角色列表
+      message.success('角色删除成功');
+    } catch (error) {
+      console.error('删除角色失败:', error);
+      message.error('角色删除失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRoleSubmit = async () => {
     try {
+      setLoading(true);
       const values = await roleForm.validateFields();
-      const now = new Date().toLocaleString();
-      const roleData: Role = {
-        ...values,
-        id: editingRole?.id || Date.now().toString(),
-        userCount: editingRole?.userCount || 0,
-        createdAt: editingRole?.createdAt || now,
-        updatedAt: now,
-      };
-
+      
       if (editingRole) {
-        setRoles(roles.map((role) => (role.id === editingRole.id ? roleData : role)));
+        // 更新角色
+        const updateData = {
+          name: values.name,
+          code: values.code,
+          description: values.description,
+        };
+        await permissionAPI.updateRole(Number(editingRole.id), updateData);
         message.success('角色更新成功');
       } else {
-        setRoles([...roles, roleData]);
+        // 创建角色
+        const createData = {
+          name: values.name,
+          code: values.code,
+          description: values.description,
+        };
+        await permissionAPI.createRole(createData);
         message.success('角色创建成功');
       }
 
+      await loadRoles(); // 重新加载角色列表
       setRoleModalVisible(false);
-    } catch {
-      // 表单验证失败
+    } catch (error) {
+      console.error('角色操作失败:', error);
+      message.error(editingRole ? '角色更新失败' : '角色创建失败');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleConfigPermissions = (role: Role) => {
-    setEditingRole(role);
-    // TODO: 获取角色的权限列表
-    setSelectedRolePermissions([]);
-    setPermissionConfigModalVisible(true);
+  const handleConfigPermissions = async (role: Role) => {
+    try {
+      setLoading(true);
+      setEditingRole(role);
+      
+      // 从API获取角色的当前权限
+      const response = await permissionAPI.getRolePermissions(Number(role.id));
+      const rolePermissions = response.data || response;
+      setSelectedRolePermissions(rolePermissions.map((p: Permission) => p.id));
+      
+      setPermissionConfigModalVisible(true);
+    } catch (error) {
+      console.error('获取角色权限失败:', error);
+      message.error('获取角色权限失败');
+      // 如果获取失败，仍然打开模态框，但权限为空
+      setSelectedRolePermissions([]);
+      setPermissionConfigModalVisible(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 提交权限配置
-  const handlePermissionConfigSubmit = () => {
-    if (!editingRole) return;
-    
-    const updatedRoles = roles.map(role => {
-      if (role.id === editingRole.id) {
-        return {
-          ...role,
-          permissions: selectedRolePermissions,
-          updatedAt: new Date().toLocaleString()
-        };
-      }
-      return role;
-    });
-    
-    setRoles(updatedRoles);
-    setPermissionConfigModalVisible(false);
-    setEditingRole(null);
-    setSelectedRolePermissions([]);
-    message.success('权限配置成功！');
+  const handlePermissionConfigSubmit = async () => {
+    try {
+      if (!editingRole) return;
+      
+      setLoading(true);
+      await permissionAPI.assignRolePermissions(Number(editingRole.id), selectedRolePermissions.map(id => Number(id)));
+      
+      setPermissionConfigModalVisible(false);
+      setEditingRole(null);
+      setSelectedRolePermissions([]);
+      message.success('权限配置成功！');
+    } catch (error) {
+      console.error('权限配置失败:', error);
+      message.error('权限配置失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 权限相关操作
@@ -829,35 +529,50 @@ const PermissionsPage: React.FC = () => {
     setPermissionModalVisible(true);
   };
 
-  const handleDeletePermission = (id: string) => {
-    setPermissions(permissions.filter((permission) => permission.id !== id));
-    message.success('权限删除成功');
+  const handleDeletePermission = async () => {
+    try {
+      setLoading(true);
+      // 注意：根据API文档，权限删除可能需要特殊处理，这里暂时注释
+      // await permissionAPI.deletePermission(id);
+      // await loadPermissions();
+      message.warning('权限删除功能暂未开放');
+    } catch (error) {
+      console.error('删除权限失败:', error);
+      message.error('权限删除失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePermissionSubmit = async () => {
     try {
+      setLoading(true);
       const values = await permissionForm.validateFields();
-      const now = new Date().toLocaleString();
-      const permissionData: Permission = {
-        ...values,
-        id: editingPermission?.id || Date.now().toString(),
-        createdAt: editingPermission?.createdAt || now,
-        updatedAt: now,
-      };
-
+      
       if (editingPermission) {
-        setPermissions(permissions.map((permission) => 
-          permission.id === editingPermission.id ? permissionData : permission
-        ));
-        message.success('权限更新成功');
+        // 权限更新功能暂未在API中开放
+        message.info('权限更新功能暂未开放，请联系系统管理员');
       } else {
-        setPermissions([...permissions, permissionData]);
-        message.success('权限创建成功');
+        // 权限创建功能暂未在API中开放
+        // 需要添加 code 字段
+        // const permissionData = {
+        //   name: values.name,
+        //   code: values.code || values.name.toLowerCase().replace(/\s+/g, '_'),
+        //   description: values.description,
+        //   isEnabled: values.enabled,
+        //   sortOrder: values.sort
+        // };
+        message.info('权限创建功能暂未开放，请联系系统管理员');
       }
-
+      
       setPermissionModalVisible(false);
-    } catch {
-      // 表单验证失败
+      setEditingPermission(null);
+      permissionForm.resetFields();
+    } catch (error) {
+      console.error('权限操作失败:', error);
+      message.error('权限操作失败，请重试');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -868,52 +583,52 @@ const PermissionsPage: React.FC = () => {
     setUserRoleModalVisible(true);
   };
 
-  const handleEditUserRole = (userRole: UserRole) => {
+  const handleEditUserRole = (userRole: UserRoleAssignment) => {
     setEditingUserRole(userRole);
     userRoleForm.setFieldsValue({
       ...userRole,
-      roleIds: userRole.roles.map(role => role.id),
+      roleIds: userRole.roles.map((role: Role) => role.id),
     });
     setUserRoleModalVisible(true);
   };
 
-  const handleDeleteUserRole = (id: string) => {
-    setUserRoles(userRoles.filter((userRole) => userRole.id !== id));
-    message.success('用户角色删除成功');
+  const handleDeleteUserRole = async () => {
+    try {
+      setLoading(true);
+      // 用户角色删除功能需要通过用户管理API实现
+      message.warning('用户角色删除功能请在用户管理页面操作');
+    } catch (error) {
+      console.error('删除用户角色失败:', error);
+      message.error('用户角色删除失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUserRoleSubmit = async () => {
     try {
-      const values = await userRoleForm.validateFields();
-      const selectedRoles = roles.filter(role => values.roleIds.includes(role.id));
-      const now = new Date().toLocaleString();
-      
-      const userRoleData: UserRole = {
-        ...values,
-        id: editingUserRole?.id || Date.now().toString(),
-        roles: selectedRoles,
-        lastLoginAt: editingUserRole?.lastLoginAt || '',
-        createdAt: editingUserRole?.createdAt || now,
-      };
+      setLoading(true);
+      await userRoleForm.validateFields();
 
       if (editingUserRole) {
-        setUserRoles(userRoles.map((userRole) => 
-          userRole.id === editingUserRole.id ? userRoleData : userRole
-        ));
-        message.success('用户角色更新成功');
+        // 用户角色更新功能需要通过用户管理API实现
+        message.warning('用户角色更新功能请在用户管理页面操作');
       } else {
-        setUserRoles([...userRoles, userRoleData]);
-        message.success('用户角色创建成功');
+        // 用户角色创建功能需要通过用户管理API实现
+        message.warning('用户角色创建功能请在用户管理页面操作');
       }
 
       setUserRoleModalVisible(false);
-    } catch {
-      // 表单验证失败
+    } catch (error) {
+      console.error('用户角色操作失败:', error);
+      message.error(editingUserRole ? '用户角色更新失败' : '用户角色创建失败');
+    } finally {
+      setLoading(false);
     }
   };
 
   // 搜索过滤
-  const getFilteredData = (data: any[], searchText: string) => {
+  const getFilteredData = <T extends Record<string, unknown>>(data: T[], searchText: string): T[] => {
     if (!searchText) return data;
     return data.filter(item => 
       Object.values(item).some(value => 
@@ -970,8 +685,8 @@ const PermissionsPage: React.FC = () => {
                     icon={<ReloadOutlined />}
                     onClick={() => {
                       setSearchText('');
-                      setLoading(true);
-                      setTimeout(() => setLoading(false), 500);
+                      loadRoles();
+                      loadPermissions();
                     }}
                   >
                     刷新
@@ -985,7 +700,7 @@ const PermissionsPage: React.FC = () => {
                   新建角色
                 </Button>
               </div>
-              <Table
+              <Table<Role>
                 columns={roleColumns}
                 dataSource={getFilteredData(roles, searchText)}
                 rowKey="id"
@@ -1055,7 +770,7 @@ const PermissionsPage: React.FC = () => {
                   新建权限
                 </Button>
               </div>
-              <Table
+              <Table<Permission>
                 columns={permissionColumns}
                 dataSource={getFilteredData(permissions, searchText)}
                 rowKey="id"
@@ -1125,7 +840,7 @@ const PermissionsPage: React.FC = () => {
                   分配角色
                 </Button>
               </div>
-              <Table
+              <Table<UserRoleAssignment>
                 columns={userRoleColumns}
                 dataSource={getFilteredData(userRoles, searchText)}
                 rowKey="id"

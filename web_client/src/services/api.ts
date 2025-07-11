@@ -91,4 +91,27 @@ export const dashboardAPI = {
   getRecentOrders: (limit: number = 10) => api.get('/dashboard/recent-orders', { params: { limit } }),
 };
 
+// 权限管理API
+export const permissionAPI = {
+  // 角色管理
+  getRoles: (params?: { page?: number; pageSize?: number; keyword?: string; isEnabled?: boolean }) => 
+    api.get('/permissions/roles', { params }),
+  getRoleById: (id: number) => api.get(`/permissions/roles/${id}`),
+  createRole: (data: { name: string; code: string; description?: string; isEnabled?: boolean; sortOrder?: number }) => 
+    api.post('/permissions/roles', data),
+  updateRole: (id: number, data: { name: string; code: string; description?: string; isEnabled?: boolean; sortOrder?: number }) => 
+    api.patch(`/permissions/roles/${id}`, data),
+  deleteRole: (id: number) => api.post(`/permissions/roles/${id}/delete`),
+  
+  // 权限管理
+  getPermissions: (params?: { type?: 'MENU' | 'BUTTON' | 'API'; parentId?: number }) => 
+    api.get('/permissions/permissions', { params }),
+  getPermissionTree: () => api.get('/permissions/permissions/tree'),
+  
+  // 角色权限关联
+  getRolePermissions: (roleId: number) => api.get(`/permissions/roles/${roleId}/permissions`),
+  assignRolePermissions: (roleId: number, permissionIds: number[]) => 
+    api.post(`/permissions/roles/${roleId}/permissions`, { permissionIds }),
+};
+
 export default api;

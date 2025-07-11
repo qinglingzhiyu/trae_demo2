@@ -35,6 +35,14 @@ const SystemSettings: React.FC = () => {
       color: '#1890ff',
     },
     {
+      key: 'accounts',
+      title: '后端账号管理',
+      description: '管理后端系统账号和用户信息',
+      icon: <UserOutlined style={{ fontSize: '32px' }} />,
+      path: '/settings/accounts',
+      color: '#722ed1',
+    },
+    {
       key: 'parameters',
       title: '系统参数',
       description: '配置系统基础参数和功能设置',

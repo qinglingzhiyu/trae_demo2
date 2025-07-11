@@ -5,8 +5,8 @@ export class AuditLogEntity {
   @ApiProperty({ description: '日志ID', example: 1 })
   id: number;
 
-  @ApiProperty({ description: '操作用户ID', example: 1 })
-  userId: number;
+  @ApiProperty({ description: '操作用户ID', example: '1' })
+  userId: string;
 
   @ApiProperty({ description: '操作用户名', example: 'admin' })
   username?: string;
@@ -14,38 +14,41 @@ export class AuditLogEntity {
   @ApiProperty({ description: '操作用户姓名', example: '管理员' })
   userRealName?: string;
 
-  @ApiProperty({ description: '操作模块', example: 'USER' })
-  module: string;
-
   @ApiProperty({ description: '操作动作', example: 'CREATE' })
   action: string;
 
-  @ApiProperty({ description: '操作描述', example: '创建用户' })
-  description: string;
+  @ApiProperty({ description: '资源类型', example: 'USER' })
+  resource: string;
 
-  @ApiProperty({ description: '目标资源类型', example: 'User' })
-  targetType: string;
+  @ApiProperty({ description: '资源ID', example: '123' })
+  resourceId?: string;
 
-  @ApiProperty({ description: '目标资源ID', example: '123' })
-  targetId: string;
+  @ApiProperty({ description: 'HTTP方法', example: 'POST' })
+  method: string;
 
-  @ApiProperty({ description: '操作前数据', example: {} })
-  oldData: any;
-
-  @ApiProperty({ description: '操作后数据', example: {} })
-  newData: any;
+  @ApiProperty({ description: '请求路径', example: '/api/users' })
+  path: string;
 
   @ApiProperty({ description: 'IP地址', example: '192.168.1.1' })
-  ipAddress: string;
+  ip: string;
+
+  @ApiProperty({ description: '请求数据', example: '{}' })
+  requestData?: string;
+
+  @ApiProperty({ description: '响应数据', example: '{}' })
+  responseData?: string;
 
   @ApiProperty({ description: '用户代理', example: 'Mozilla/5.0...' })
-  userAgent: string;
+  userAgent?: string;
 
-  @ApiProperty({ description: '操作结果', example: 'SUCCESS' })
-  result: string;
+  @ApiProperty({ description: '响应状态码', example: 200 })
+  statusCode?: number;
+
+  @ApiProperty({ description: '响应时间(ms)', example: 100 })
+  responseTime?: number;
 
   @ApiProperty({ description: '错误信息', example: '' })
-  errorMessage: string;
+  error?: string;
 
   @ApiProperty({ description: '操作时间', example: '2023-01-01T00:00:00.000Z' })
   createdAt: Date;
@@ -98,7 +101,7 @@ export class AuditLogStatsEntity {
 
   @ApiProperty({ description: '用户操作统计', type: 'array', items: { type: 'object' } })
   userStats: {
-    userId: number;
+    userId: string;
     username: string;
     count: number;
     percentage: number;

@@ -4,7 +4,7 @@ export interface User {
   username: string;
   email: string;
   phone?: string;
-  role: UserRole;
+  role: UserRoleEnum;
   status: UserStatus;
   avatar?: string;
   realName?: string;
@@ -12,7 +12,7 @@ export interface User {
   updatedAt: string;
 }
 
-export enum UserRole {
+export enum UserRoleEnum {
   ADMIN = 'ADMIN',
   MANAGER = 'MANAGER',
   STAFF = 'STAFF',
@@ -139,4 +139,66 @@ export interface MenuItem {
   icon?: React.ReactNode;
   children?: MenuItem[];
   path?: string;
+}
+
+// 权限管理相关类型定义
+export interface Role {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  enabled: boolean;
+  isSystem: boolean;
+  sort: number;
+  userCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Permission {
+  id: string;
+  name: string;
+  code: string;
+  type: 'menu' | 'button' | 'api';
+  parentId?: string;
+  path?: string;
+  icon?: string;
+  sort: number;
+  enabled: boolean;
+  children?: Permission[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserRoleAssignment {
+  id: string;
+  username: string;
+  realName: string;
+  email: string;
+  phone: string;
+  status: 'active' | 'inactive' | 'locked';
+  roles: Role[];
+  lastLoginAt: string;
+  createdAt: string;
+}
+
+// 权限管理API请求类型
+export interface CreateRoleRequest {
+  name: string;
+  code: string;
+  description?: string;
+  isEnabled?: boolean;
+  sortOrder?: number;
+}
+
+export interface UpdateRoleRequest {
+  name: string;
+  code: string;
+  description?: string;
+  isEnabled?: boolean;
+  sortOrder?: number;
+}
+
+export interface AssignPermissionsRequest {
+  permissionIds: number[];
 }

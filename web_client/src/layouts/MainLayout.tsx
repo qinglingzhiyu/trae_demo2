@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Badge, Button, Space } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Badge, Button, Space, Breadcrumb } from 'antd';
 import {
   DashboardOutlined,
   UserOutlined,
@@ -14,10 +14,13 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MedicineBoxOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import { storage } from '@/utils';
-import type { MenuItem } from '@/types';
+import { MenuItem } from '@/types';
+import ProgressBar from '@/components/ProgressBar';
+import NProgress from 'nprogress';
 
 const { Header, Sider, Content } = Layout;
 
@@ -106,6 +109,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const handleMenuClick = ({ key }: { key: string }) => {
     const menuItem = findMenuItem(menuItems, key);
     if (menuItem?.path) {
+      NProgress.start();
       router.push(menuItem.path);
     }
   };
@@ -125,6 +129,58 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // 获取当前选中的菜单项
   const getSelectedKeys = () => {
     return [pathname];
+  };
+
+  // 生成面包屑导航
+  const getBreadcrumbItems = () => {
+    const pathSegments = pathname.split('/').filter(Boolean);
+    const breadcrumbItems: Array<{ title: React.ReactNode; href?: string }> = [
+      {
+        title: (
+          <span>
+            <HomeOutlined />
+            <span style={{ marginLeft: 4 }}>首页</span>
+          </span>
+        ),
+        href: '/dashboard',
+      },
+    ];
+
+    let currentPath = '';
+    pathSegments.forEach((segment, index) => {
+      currentPath += `/${segment}`;
+      const menuItem = findMenuItem(menuItems, currentPath);
+      
+      if (menuItem) {
+        breadcrumbItems.push({
+          title: <span>{menuItem.label}</span>,
+          ...(index === pathSegments.length - 1 ? {} : { href: currentPath }),
+        });
+      } else {
+        // 处理特殊路径
+        const segmentMap: Record<string, string> = {
+          'dashboard': '工作台',
+          'users': '用户管理',
+          'patients': '患者管理',
+          'orders': '订单管理',
+          'analytics': '数据分析',
+          'settings': '系统设置',
+          'personal': '个人设置',
+          'permissions': '权限管理',
+          'parameters': '参数配置',
+          'dictionary': '字典管理',
+          'notifications': '通知设置',
+        };
+        
+        const title = segmentMap[segment] || segment;
+        breadcrumbItems.push({
+          title: <span>{title}</span>,
+          ...(index === pathSegments.length - 1 ? {} : { href: currentPath }),
+        });
+      }
+    });
+
+    return breadcrumbItems;
   };
 
   // 初始化展开的菜单项
@@ -166,12 +222,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const handleUserMenuClick = ({ key }: { key: string }) => {
     switch (key) {
       case 'profile':
+        NProgress.start();
         router.push('/profile');
         break;
       case 'settings':
+        NProgress.start();
         router.push('/settings/personal');
         break;
       case 'logout':
+        NProgress.start();
         storage.remove('token');
         storage.remove('user');
         router.push('/login');
@@ -180,7 +239,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <>
+      <ProgressBar />
+      <Layout style={{ minHeight: '100vh' }}>
       {/* 侧边栏 */}
       <Sider
         trigger={null}
@@ -233,7 +294,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             justifyContent: 'space-between',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
             <Button
               type="text"
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -244,10 +305,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 height: 64,
               }}
             />
-            <Space>
-              <span style={{ cursor: 'pointer' }}>首页</span>
-              <span style={{ cursor: 'pointer' }}>帮助文档</span>
-            </Space>
+            <Breadcrumb
+              items={getBreadcrumbItems()}
+              style={{ marginLeft: 16 }}
+            />
           </div>
 
           <Space size="large">
@@ -296,6 +357,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </Content>
       </Layout>
     </Layout>
+    </>
   );
 };
 
