@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Button, Space, Typography, Avatar, Spin } from 'antd';
 import {
   UserOutlined,
@@ -28,16 +28,51 @@ const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [orderTrendPeriod, setOrderTrendPeriod] = useState<OrderTrendPeriod>('day');
   const [userDistributionType, setUserDistributionType] = useState<UserDistributionType>('gender');
-  const [stats] = useState({
-    totalUsers: 8846,
-    totalPatients: 12721,
-    totalOrders: 2856,
-    totalRevenue: 198520,
+  // 统计数据状态
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalPatients: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
     userGrowth: 12.5,
     patientGrowth: 8.2,
     orderGrowth: 15.3,
     revenueGrowth: 23.1,
   });
+
+  // 获取统计数据
+   useEffect(() => {
+     const fetchStats = async () => {
+       try {
+         // 获取账号统计
+         const accountsResponse = await fetch('/api/v1/accounts/statistics', {
+           headers: {
+             'Authorization': `Bearer ${localStorage.getItem('token')}`,
+             'Content-Type': 'application/json',
+           },
+         });
+         
+         if (accountsResponse.ok) {
+           const accountsData = await accountsResponse.json();
+           
+           setStats(prevStats => ({
+             ...prevStats,
+             totalUsers: accountsData.total || 0,
+             totalPatients: 12721, // 暂时保持模拟数据，等患者接口
+             totalOrders: 2856, // 暂时保持模拟数据，等订单接口
+             totalRevenue: 198520, // 暂时保持模拟数据，等收入接口
+           }));
+         } else {
+           console.warn('获取账号统计失败:', accountsResponse.status);
+         }
+       } catch (error) {
+         console.error('获取统计数据失败:', error);
+         // 保持默认值
+       }
+     };
+ 
+     fetchStats();
+   }, []);
   const [recentActivities] = useState([
     {
       id: 1,

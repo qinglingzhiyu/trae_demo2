@@ -19,6 +19,7 @@ import {
   Divider,
   Tree,
   InputNumber,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
@@ -37,26 +38,28 @@ const { Option } = Select;
 const { TextArea } = Input;
 const { Search } = Input;
 
+import { dictionariesApi, DictionaryType as ApiDictionaryType, DictionaryItem as ApiDictionaryItem } from '@/api/dictionaries';
+
 interface DictionaryType {
-  id: string;
+  id: number;
   name: string;
   code: string;
   description: string;
-  status: 'active' | 'inactive';
+  status: boolean;
   itemCount: number;
   createdAt: string;
   updatedAt: string;
 }
 
 interface DictionaryItem {
-  id: string;
-  typeId: string;
+  id: number;
+  typeId: number;
   label: string;
   value: string;
   sort: number;
-  status: 'active' | 'inactive';
+  status: boolean;
   description: string;
-  parentId?: string;
+  parentId?: number;
   children?: DictionaryItem[];
   createdAt: string;
   updatedAt: string;
@@ -74,176 +77,78 @@ const DictionaryPage: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [itemSearchText, setItemSearchText] = useState('');
 
-  // 模拟数据
-  const [dictionaryTypes, setDictionaryTypes] = useState<DictionaryType[]>([
-    {
-      id: '1',
-      name: '用户状态',
-      code: 'user_status',
-      description: '用户账户状态分类',
-      status: 'active',
-      itemCount: 3,
-      createdAt: '2024-01-15 10:30:00',
-      updatedAt: '2024-01-15 10:30:00',
-    },
-    {
-      id: '2',
-      name: '订单状态',
-      code: 'order_status',
-      description: '订单处理状态分类',
-      status: 'active',
-      itemCount: 5,
-      createdAt: '2024-01-15 11:00:00',
-      updatedAt: '2024-01-15 11:00:00',
-    },
-    {
-      id: '3',
-      name: '性别',
-      code: 'gender',
-      description: '性别分类',
-      status: 'active',
-      itemCount: 3,
-      createdAt: '2024-01-15 11:30:00',
-      updatedAt: '2024-01-15 11:30:00',
-    },
-    {
-      id: '4',
-      name: '地区分类',
-      code: 'region',
-      description: '地区层级分类',
-      status: 'active',
-      itemCount: 12,
-      createdAt: '2024-01-15 12:00:00',
-      updatedAt: '2024-01-15 12:00:00',
-    },
-  ]);
+  const [dictionaryTypes, setDictionaryTypes] = useState<DictionaryType[]>([]);
+  const [dictionaryItems, setDictionaryItems] = useState<DictionaryItem[]>([]);
+  const [typesLoading, setTypesLoading] = useState(false);
+  const [itemsLoading, setItemsLoading] = useState(false);
+  
+  // 加载字典类型列表
+  const loadDictionaryTypes = async () => {
+    try {
+      setTypesLoading(true);
+      const response = await dictionariesApi.getAllDictionaryTypes();
+      const types = response.map((type: ApiDictionaryType) => ({
+        id: type.id,
+        name: type.name,
+        code: type.code,
+        description: type.description || '',
+        status: type.isActive !== undefined ? type.isActive : true,
+        itemCount: type.items?.length || 0,
+        createdAt: new Date(type.createdAt).toLocaleString(),
+        updatedAt: new Date(type.updatedAt).toLocaleString(),
+      }));
+      setDictionaryTypes(types);
+    } catch (error) {
+      console.error('加载字典类型失败:', error);
+      message.error('加载字典类型失败');
+    } finally {
+      setTypesLoading(false);
+    }
+  };
 
-  const [dictionaryItems, setDictionaryItems] = useState<DictionaryItem[]>([
-    // 用户状态
-    {
-      id: '1',
-      typeId: '1',
-      label: '正常',
-      value: 'active',
-      sort: 1,
-      status: 'active',
-      description: '用户状态正常',
-      createdAt: '2024-01-15 10:30:00',
-      updatedAt: '2024-01-15 10:30:00',
-    },
-    {
-      id: '2',
-      typeId: '1',
-      label: '禁用',
-      value: 'disabled',
-      sort: 2,
-      status: 'active',
-      description: '用户被禁用',
-      createdAt: '2024-01-15 10:30:00',
-      updatedAt: '2024-01-15 10:30:00',
-    },
-    {
-      id: '3',
-      typeId: '1',
-      label: '待审核',
-      value: 'pending',
-      sort: 3,
-      status: 'active',
-      description: '用户待审核',
-      createdAt: '2024-01-15 10:30:00',
-      updatedAt: '2024-01-15 10:30:00',
-    },
-    // 订单状态
-    {
-      id: '4',
-      typeId: '2',
-      label: '待支付',
-      value: 'pending_payment',
-      sort: 1,
-      status: 'active',
-      description: '订单待支付',
-      createdAt: '2024-01-15 11:00:00',
-      updatedAt: '2024-01-15 11:00:00',
-    },
-    {
-      id: '5',
-      typeId: '2',
-      label: '已支付',
-      value: 'paid',
-      sort: 2,
-      status: 'active',
-      description: '订单已支付',
-      createdAt: '2024-01-15 11:00:00',
-      updatedAt: '2024-01-15 11:00:00',
-    },
-    {
-      id: '6',
-      typeId: '2',
-      label: '处理中',
-      value: 'processing',
-      sort: 3,
-      status: 'active',
-      description: '订单处理中',
-      createdAt: '2024-01-15 11:00:00',
-      updatedAt: '2024-01-15 11:00:00',
-    },
-    {
-      id: '7',
-      typeId: '2',
-      label: '已完成',
-      value: 'completed',
-      sort: 4,
-      status: 'active',
-      description: '订单已完成',
-      createdAt: '2024-01-15 11:00:00',
-      updatedAt: '2024-01-15 11:00:00',
-    },
-    {
-      id: '8',
-      typeId: '2',
-      label: '已取消',
-      value: 'cancelled',
-      sort: 5,
-      status: 'active',
-      description: '订单已取消',
-      createdAt: '2024-01-15 11:00:00',
-      updatedAt: '2024-01-15 11:00:00',
-    },
-    // 性别
-    {
-      id: '9',
-      typeId: '3',
-      label: '男',
-      value: 'male',
-      sort: 1,
-      status: 'active',
-      description: '男性',
-      createdAt: '2024-01-15 11:30:00',
-      updatedAt: '2024-01-15 11:30:00',
-    },
-    {
-      id: '10',
-      typeId: '3',
-      label: '女',
-      value: 'female',
-      sort: 2,
-      status: 'active',
-      description: '女性',
-      createdAt: '2024-01-15 11:30:00',
-      updatedAt: '2024-01-15 11:30:00',
-    },
-    {
-      id: '11',
-      typeId: '3',
-      label: '未知',
-      value: 'unknown',
-      sort: 3,
-      status: 'active',
-      description: '性别未知',
-      createdAt: '2024-01-15 11:30:00',
-      updatedAt: '2024-01-15 11:30:00',
-    },
-  ]);
+  // 加载字典项列表
+  const loadDictionaryItems = async (typeCode: string) => {
+    if (!typeCode) return;
+    
+    try {
+      setItemsLoading(true);
+      const response = await dictionariesApi.getDictionaryItemsByType(typeCode);
+      const items = response.map((item: ApiDictionaryItem) => ({
+        id: item.id,
+        typeId: item.typeId,
+        label: item.label,
+        value: item.value,
+        sort: item.sort || 0,
+        status: true, // 后端API中没有status字段，默认为启用
+        description: item.description || '',
+        createdAt: new Date(item.createdAt).toLocaleString(),
+        updatedAt: new Date(item.updatedAt).toLocaleString(),
+      }));
+      setDictionaryItems(items);
+    } catch (error) {
+      console.error('加载字典项失败:', error);
+      message.error('加载字典项失败');
+    } finally {
+      setItemsLoading(false);
+    }
+  };
+  
+  // 初始加载
+  useEffect(() => {
+    loadDictionaryTypes();
+  }, []);
+  
+  // 当选择的字典类型变化时，加载对应的字典项
+  useEffect(() => {
+    if (selectedType) {
+      const selectedTypeObj = dictionaryTypes.find(type => type.id === Number(selectedType));
+      if (selectedTypeObj) {
+        loadDictionaryItems(selectedTypeObj.code);
+      }
+    } else {
+      setDictionaryItems([]);
+    }
+  }, [selectedType, dictionaryTypes]);
 
   // 字典类型表格列
   const typeColumns: ColumnsType<DictionaryType> = [
@@ -254,7 +159,7 @@ const DictionaryPage: React.FC = () => {
       render: (text, record) => (
         <Button
           type="link"
-          onClick={() => setSelectedType(record.id)}
+          onClick={() => setSelectedType(record.id.toString())}
           style={{ padding: 0, height: 'auto' }}
         >
           {text}
@@ -278,8 +183,8 @@ const DictionaryPage: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
-        <Tag color={status === 'active' ? 'green' : 'red'}>
-          {status === 'active' ? '启用' : '禁用'}
+        <Tag color={status ? 'green' : 'red'}>
+          {status ? '启用' : '禁用'}
         </Tag>
       ),
     },
@@ -361,8 +266,8 @@ const DictionaryPage: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
-        <Tag color={status === 'active' ? 'green' : 'red'}>
-          {status === 'active' ? '启用' : '禁用'}
+        <Tag color={status ? 'green' : 'red'}>
+          {status ? '启用' : '禁用'}
         </Tag>
       ),
     },
@@ -419,17 +324,20 @@ const DictionaryPage: React.FC = () => {
     setTypeModalVisible(true);
   };
 
-  const handleDeleteType = async (id: string) => {
+  const handleDeleteType = async (id: number) => {
     try {
       setLoading(true);
-      // 这里应该调用API删除字典类型
+      await dictionariesApi.deleteDictionaryType(id);
+      
+      // 更新本地状态
       setDictionaryTypes(prev => prev.filter(item => item.id !== id));
       setDictionaryItems(prev => prev.filter(item => item.typeId !== id));
-      if (selectedType === id) {
+      if (selectedType === id.toString()) {
         setSelectedType(null);
       }
       message.success('删除成功');
     } catch (error) {
+      console.error('删除字典类型失败:', error);
       message.error('删除失败');
     } finally {
       setLoading(false);
@@ -443,6 +351,14 @@ const DictionaryPage: React.FC = () => {
       
       if (editingType) {
         // 编辑
+        const updateData = {
+          name: values.name,
+          description: values.description,
+        };
+        
+        await dictionariesApi.updateDictionaryType(editingType.id, updateData);
+        
+        // 更新本地状态
         setDictionaryTypes(prev => 
           prev.map(item => 
             item.id === editingType.id 
@@ -453,12 +369,24 @@ const DictionaryPage: React.FC = () => {
         message.success('更新成功');
       } else {
         // 新增
+        const createData = {
+          type: values.code,
+          name: values.name,
+          description: values.description,
+        };
+        
+        const response = await dictionariesApi.createDictionaryType(createData);
+        
+        // 更新本地状态
         const newType: DictionaryType = {
-          id: Date.now().toString(),
-          ...values,
+          id: response.id,
+          name: response.name,
+          code: response.code,
+          description: response.description || '',
+          status: true,
           itemCount: 0,
-          createdAt: new Date().toLocaleString(),
-          updatedAt: new Date().toLocaleString(),
+          createdAt: new Date(response.createdAt).toLocaleString(),
+          updatedAt: new Date(response.updatedAt).toLocaleString(),
         };
         setDictionaryTypes(prev => [...prev, newType]);
         message.success('添加成功');
@@ -466,6 +394,7 @@ const DictionaryPage: React.FC = () => {
       
       setTypeModalVisible(false);
     } catch (error) {
+      console.error('保存字典类型失败:', error);
       message.error('保存失败');
     } finally {
       setLoading(false);
@@ -490,12 +419,16 @@ const DictionaryPage: React.FC = () => {
     setItemModalVisible(true);
   };
 
-  const handleDeleteItem = async (id: string) => {
+  const handleDeleteItem = async (id: number) => {
     try {
       setLoading(true);
-      setDictionaryItems(prev => prev.filter(item => item.id !== id));
-      // 更新字典类型的项目数量
+      await dictionariesApi.deleteDictionaryItem(id);
+      
+      // 更新本地状态
       const item = dictionaryItems.find(item => item.id === id);
+      setDictionaryItems(prev => prev.filter(item => item.id !== id));
+      
+      // 更新字典类型的项目数量
       if (item) {
         setDictionaryTypes(prev => 
           prev.map(type => 
@@ -507,6 +440,7 @@ const DictionaryPage: React.FC = () => {
       }
       message.success('删除成功');
     } catch (error) {
+      console.error('删除字典项失败:', error);
       message.error('删除失败');
     } finally {
       setLoading(false);
@@ -520,6 +454,16 @@ const DictionaryPage: React.FC = () => {
       
       if (editingItem) {
         // 编辑
+        const updateData = {
+          label: values.label,
+          value: values.value,
+          description: values.description,
+          sort: values.sort,
+        };
+        
+        await dictionariesApi.updateDictionaryItem(editingItem.id, updateData);
+        
+        // 更新本地状态
         setDictionaryItems(prev => 
           prev.map(item => 
             item.id === editingItem.id 
@@ -530,17 +474,34 @@ const DictionaryPage: React.FC = () => {
         message.success('更新成功');
       } else {
         // 新增
+        const createData = {
+          typeId: Number(values.typeId),
+          label: values.label,
+          value: values.value,
+          description: values.description,
+          sort: values.sort,
+        };
+        
+        const response = await dictionariesApi.createDictionaryItem(createData);
+        
+        // 更新本地状态
         const newItem: DictionaryItem = {
-          id: Date.now().toString(),
-          ...values,
-          createdAt: new Date().toLocaleString(),
-          updatedAt: new Date().toLocaleString(),
+          id: response.id,
+          typeId: response.typeId,
+          label: response.label,
+          value: response.value,
+          sort: response.sort || 0,
+          status: true,
+          description: response.description || '',
+          createdAt: new Date(response.createdAt).toLocaleString(),
+          updatedAt: new Date(response.updatedAt).toLocaleString(),
         };
         setDictionaryItems(prev => [...prev, newItem]);
+        
         // 更新字典类型的项目数量
         setDictionaryTypes(prev => 
           prev.map(type => 
-            type.id === values.typeId 
+            type.id === Number(values.typeId) 
               ? { ...type, itemCount: type.itemCount + 1 }
               : type
           )
@@ -550,6 +511,7 @@ const DictionaryPage: React.FC = () => {
       
       setItemModalVisible(false);
     } catch (error) {
+      console.error('保存字典项失败:', error);
       message.error('保存失败');
     } finally {
       setLoading(false);
@@ -608,26 +570,28 @@ const DictionaryPage: React.FC = () => {
                 />
               </div>
               
-              <Table
-                columns={typeColumns}
-                dataSource={filteredTypes}
-                rowKey="id"
-                loading={loading}
-                pagination={{
-                  pageSize: 10,
-                  showSizeChanger: true,
-                  showQuickJumper: true,
-                  showTotal: (total) => `共 ${total} 条`,
-                }}
-                rowSelection={{
-                  type: 'radio',
-                  selectedRowKeys: selectedType ? [selectedType] : [],
-                  onChange: (selectedRowKeys) => {
-                    setSelectedType(selectedRowKeys[0] as string || null);
-                  },
-                }}
-                size="small"
-              />
+              <Spin spinning={typesLoading}>
+                <Table
+                  columns={typeColumns}
+                  dataSource={filteredTypes}
+                  rowKey="id"
+                  loading={loading}
+                  pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    showQuickJumper: true,
+                    showTotal: (total) => `共 ${total} 条`,
+                  }}
+                  rowSelection={{
+                    type: 'radio',
+                    selectedRowKeys: selectedType ? [selectedType] : [],
+                    onChange: (selectedRowKeys) => {
+                      setSelectedType(selectedRowKeys[0]?.toString() || null);
+                    },
+                  }}
+                  size="small"
+                />
+              </Spin>
             </Card>
           </Col>
 
@@ -662,19 +626,21 @@ const DictionaryPage: React.FC = () => {
                     />
                   </div>
                   
-                  <Table
-                    columns={itemColumns}
-                    dataSource={filteredItems}
-                    rowKey="id"
-                    loading={loading}
-                    pagination={{
-                      pageSize: 10,
-                      showSizeChanger: true,
-                      showQuickJumper: true,
-                      showTotal: (total) => `共 ${total} 条`,
-                    }}
-                    size="small"
-                  />
+                  <Spin spinning={itemsLoading}>
+                    <Table
+                      columns={itemColumns}
+                      dataSource={filteredItems}
+                      rowKey="id"
+                      loading={loading}
+                      pagination={{
+                        pageSize: 10,
+                        showSizeChanger: true,
+                        showQuickJumper: true,
+                        showTotal: (total) => `共 ${total} 条`,
+                      }}
+                      size="small"
+                    />
+                  </Spin>
                 </>
               ) : (
                 <div style={{ textAlign: 'center', padding: '60px 0', color: '#999' }}>
@@ -731,8 +697,8 @@ const DictionaryPage: React.FC = () => {
               initialValue="active"
             >
               <Select>
-                <Option value="active">启用</Option>
-                <Option value="inactive">禁用</Option>
+                <Option value={true}>启用</Option>
+                <Option value={false}>禁用</Option>
               </Select>
             </Form.Item>
           </Form>
@@ -789,8 +755,8 @@ const DictionaryPage: React.FC = () => {
                   initialValue="active"
                 >
                   <Select>
-                    <Option value="active">启用</Option>
-                    <Option value="inactive">禁用</Option>
+                    <Option value={true}>启用</Option>
+                <Option value={false}>禁用</Option>
                   </Select>
                 </Form.Item>
               </Col>
